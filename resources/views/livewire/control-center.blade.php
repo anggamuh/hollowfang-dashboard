@@ -622,6 +622,10 @@
 
                    <livewire:announcement-manager />
 
+                {{-- HOLLOWFANG_V3_INTEGRATED --}}
+                @elseif (in_array($activeMenu, ['moderation', 'members', 'events', 'logs'], true))
+                    <livewire:hollowfang-v3 :initial-tab="match ($activeMenu) { 'members' => 'members', 'logs' => 'logs', 'events' => 'events', default => 'moderation' }" :key="'hollowfang-v3-'.$activeMenu" />
+
                 {{-- OTHER MODULES --}}
                 @else
 

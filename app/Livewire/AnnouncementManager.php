@@ -10,6 +10,7 @@ use Throwable;
 
 class AnnouncementManager extends Component
 {
+    use \App\Livewire\Concerns\HasAnnouncementDirectory;
     public string $channelId = '';
     public string $content = '';
     public string $title = '';
@@ -38,7 +39,7 @@ class AnnouncementManager extends Component
     public function mount(): void
     {
         $this->guardOwner();
-        $this->channelId = (string) (array_key_first(config('hollowfang_announcements.channels', [])) ?? '');
+        $this->refreshDirectory();
     }
 
     public function send(): void
@@ -46,7 +47,8 @@ class AnnouncementManager extends Component
         $this->guardOwner();
         $this->resetErrorBag();
 
-        $channels = config('hollowfang_announcements.channels', []);
+        $this->refreshDirectory();
+        $channels = $this->approvedChannels;
         $this->validate([
             'channelId' => ['required', 'string'],
             'content' => ['nullable', 'string', 'max:1800'],
@@ -151,7 +153,7 @@ class AnnouncementManager extends Component
         $this->guardOwner();
 
         return view('livewire.announcement-manager', [
-            'channels' => config('hollowfang_announcements.channels', []),
+            'channels' => $this->approvedChannels,
             'history' => DB::table('hollowfang_announcements')
                 ->orderByDesc('id')->limit(10)->get(),
         ]);
