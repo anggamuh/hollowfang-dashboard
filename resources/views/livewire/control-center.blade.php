@@ -784,63 +784,9 @@
                 @elseif (in_array($activeMenu, ['moderation', 'members', 'events', 'logs'], true))
                     <livewire:hollowfang-v3 :initial-tab="match ($activeMenu) { 'members' => 'members', 'logs' => 'logs', 'events' => 'events', default => 'moderation' }" :key="'hollowfang-v3-'.$activeMenu" />
 
-                {{-- READ-ONLY CONFIGURATION & INTEGRATION SETTINGS --}}
-                @elseif ($activeMenu === 'settings')
-                    <div class="grid gap-5 xl:grid-cols-2">
-                        <section class="rounded-3xl border border-white/10 bg-[#191a23] p-6">
-                            <p class="text-[11px] font-bold uppercase tracking-[.28em] text-violet-300">Identity & Access</p>
-                            <h3 class="mt-2 text-xl font-semibold text-white">Akun Dashboard</h3>
-                            <dl class="mt-6 space-y-4">
-                                @foreach ([
-                                    ['Nama', $discordName],
-                                    ['Discord ID', $discordConnected ? $account->discord_id : 'Belum terhubung'],
-                                    ['Akses', $isOwner ? 'Hollowfang Owner' : 'Connected Account'],
-                                    ['Guild Monitoring', $guildName ?: 'Belum terdeteksi'],
-                                ] as [$title, $value])
-                                    <div class="flex flex-wrap justify-between gap-2 border-b border-white/5 pb-3 text-sm">
-                                        <dt class="text-zinc-500">{{ $title }}</dt><dd class="max-w-full break-all text-right text-zinc-200">{{ $value }}</dd>
-                                    </div>
-                                @endforeach
-                            </dl>
-                            <a href="{{ route('discord.connect') }}" class="mt-6 inline-flex rounded-xl border border-violet-400/20 bg-violet-500/10 px-4 py-2.5 text-sm font-medium text-violet-200 transition hover:bg-violet-500/20">↻ Sinkronkan profil Discord</a>
-                        </section>
-                        <section class="rounded-3xl border border-white/10 bg-[#191a23] p-6">
-                            <p class="text-[11px] font-bold uppercase tracking-[.28em] text-violet-300">Bot Integration</p>
-                            <h3 class="mt-2 text-xl font-semibold text-white">Status Konfigurasi</h3>
-                            <div class="mt-6 space-y-3">
-                                @foreach ([
-                                    ['API Base URL', filled(config('services.manuk.base_url'))],
-                                    ['Token Monitoring', strlen((string) config('services.manuk.token')) >= 32],
-                                    ['Discord OAuth Client', filled(config('services.discord.client_id'))],
-                                    ['Owner Allowlist', count(config('hollowfang.owner_discord_ids', [])) > 0],
-                                ] as [$title, $configured])
-                                    <div class="flex justify-between gap-3 rounded-xl border border-white/5 bg-[#12131b] p-4 text-sm">
-                                        <span class="text-zinc-300">{{ $title }}</span>
-                                        <span class="{{ $configured ? 'text-emerald-400' : 'text-amber-400' }}">{{ $configured ? '✓ Configured' : '◇ Missing' }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                            <p class="mt-5 text-xs leading-relaxed text-zinc-500">Nilai token, secret, dan environment tidak ditampilkan. Pengaturan server yang sensitif tetap dilakukan melalui .env dan deployment, bukan form web.</p>
-                        </section>
-                    </div>
-                    <section class="rounded-3xl border border-violet-400/15 bg-gradient-to-br from-[#1c1528] to-[#14141c] p-6">
-                        <p class="text-[11px] font-bold uppercase tracking-[.28em] text-violet-300">Connection Guide</p>
-                        <h3 class="mt-2 text-xl font-semibold text-white">Hubungkan Dashboard dengan crypt</h3>
-                        <p class="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{{ $apiMessage }}</p>
-                        <div class="mt-5 grid gap-4 md:grid-cols-3">
-                            @foreach ([
-                                ['01', 'Jalankan bot', 'Monitoring API crypt mendengarkan port 3210 secara default dan hanya di 127.0.0.1.'],
-                                ['02', 'Atur alamat API', 'Isi MANUK_API_BASE_URL di .env Laravel dengan alamat yang benar-benar dapat dijangkau oleh server Laravel.'],
-                                ['03', 'Samakan token', 'Gunakan MANUK_API_TOKEN yang sama di kedua proses, minimal 32 karakter. Jangan expose port bot ke internet tanpa tunnel aman.'],
-                            ] as [$number, $title, $description])
-                                <article class="rounded-2xl border border-white/5 bg-black/20 p-5">
-                                    <span class="text-sm font-bold text-violet-300">{{ $number }}</span>
-                                    <h4 class="mt-3 font-semibold text-white">{{ $title }}</h4>
-                                    <p class="mt-2 text-xs leading-relaxed text-zinc-400">{{ $description }}</p>
-                                </article>
-                            @endforeach
-                        </div>
-                    </section>
+                {{-- HOLLOWFANG_V4_COMMUNITY --}}
+                @elseif ($activeMenu === 'community')
+                    <livewire:hollowfang-community :key="'hf-community'" />
 
                 {{-- OTHER MODULES --}}
                 @else

@@ -19,6 +19,7 @@ class ControlCenter extends Component
         'members' => 'Members & Roles',
         'music' => 'Music Monitoring',
         'events' => 'Events',
+        'community' => 'Community Control',
         'logs' => 'Audit Logs',
         'settings' => 'Settings',
     ];
