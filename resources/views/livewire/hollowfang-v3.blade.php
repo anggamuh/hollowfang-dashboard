@@ -41,7 +41,7 @@
         </div>
     </div>
 
-    <div class="hidden flex-wrap gap-2 rounded-2xl border border-white/10 bg-[#16171f] p-2 sm:flex">
+    <div class="flex gap-2 overflow-x-auto rounded-2xl border border-white/10 bg-[#16171f] p-2" aria-label="Navigasi operasi server">
         @foreach (['overview' => '✦ Overview', 'members' => '♙ Members & Roles', 'moderation' => '⚑ Moderation', 'logs' => '▤ Audit Logs', 'events' => '◷ Events'] as $key => $label)
             <button type="button" wire:click="switchTab('{{ $key }}')"
                 @class(['rounded-xl px-4 py-2.5 text-xs font-semibold transition sm:text-sm', 'bg-violet-700 text-white shadow-lg shadow-violet-900/20' => $tab === $key, 'text-zinc-400 hover:bg-white/5 hover:text-white' => $tab !== $key])>{{ $label }}</button>
