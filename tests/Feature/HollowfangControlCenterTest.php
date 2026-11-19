@@ -41,6 +41,15 @@ class HollowfangControlCenterTest extends TestCase
         return $user;
     }
 
+    public function test_entry_routes_redirect_to_discord_and_control_center_without_missing_views(): void
+    {
+        $this->get('/')->assertRedirect(route('discord.login'));
+
+        $owner = $this->owner();
+        $this->actingAs($owner)->get('/')->assertRedirect(route('control'));
+        $this->get('/dashboard')->assertRedirect(route('control'));
+    }
+
     public function test_control_center_rejects_unlinked_or_non_owner_discord_accounts(): void
     {
         $this->actingAs(User::factory()->create())->get('/control')->assertForbidden();
