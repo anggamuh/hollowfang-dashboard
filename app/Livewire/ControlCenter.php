@@ -4,6 +4,7 @@ namespace App\Livewire;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use App\Services\ManukApiService;
+use App\Services\BotStatusHistory;
 
 #[Layout('layouts.hollowfang')]
 class ControlCenter extends Component
@@ -39,8 +40,11 @@ class ControlCenter extends Component
 
     public function render()
     {
+        $health = app(ManukApiService::class)->health();
+
         return view('livewire.control-center', [
-            'botHealth' => app(ManukApiService::class)->health(),
+            'botHealth' => $health,
+            'statusHistory' => app(BotStatusHistory::class)->record($health),
         ]);
     }
 }

@@ -412,6 +412,44 @@
                     </div>
                 @endif
 
+                {{-- RECENT BOT STATUS TRANSITIONS --}}
+                @if (in_array($activeMenu, ['overview', 'monitoring'], true))
+                    <section aria-labelledby="bot-status-history-heading" class="rounded-2xl border border-violet-400/15 bg-[#191a21] p-5">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <h3 id="bot-status-history-heading" class="text-sm font-semibold text-white">Riwayat Koneksi Bot</h3>
+                                <p class="mt-1 text-xs text-zinc-500">Perubahan status terakhir yang diamati dashboard, bukan catatan uptime penuh.</p>
+                            </div>
+                            <span class="text-[11px] text-zinc-500">Maksimal 20 perubahan · disimpan 7 hari</span>
+                        </div>
+                        <ol class="mt-4 space-y-3">
+                            @forelse (($statusHistory ?? []) as $entry)
+                                @php
+                                    $entryStatus = $entry['status'];
+                                    $entryLabel = match ($entryStatus) {
+                                        'online' => 'Bot online',
+                                        'bot_offline' => 'Discord bot offline',
+                                        'unreachable' => 'API tidak terjangkau',
+                                        'unauthorized' => 'Token API ditolak',
+                                        'http_error' => 'API mengembalikan error',
+                                        'invalid_response' => 'Respons API tidak valid',
+                                        default => 'Monitoring belum dikonfigurasi',
+                                    };
+                                @endphp
+                                <li class="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.025] px-3 py-2 text-xs">
+                                    <span class="flex items-center gap-2 {{ $entryStatus === 'online' ? 'text-emerald-300' : 'text-amber-300' }}">
+                                        <span class="h-2 w-2 shrink-0 rounded-full {{ $entryStatus === 'online' ? 'bg-emerald-400' : 'bg-amber-400' }}"></span>
+                                        {{ $entryLabel }}
+                                    </span>
+                                    <time class="shrink-0 text-zinc-500" datetime="{{ $entry['at'] }}">{{ \Illuminate\Support\Carbon::parse($entry['at'])->format('d M Y, H:i:s') }}</time>
+                                </li>
+                            @empty
+                                <li class="text-xs text-zinc-500">Belum ada perubahan status yang tercatat.</li>
+                            @endforelse
+                        </ol>
+                    </section>
+                @endif
+
                 {{-- SUCCESS NOTIFICATION --}}
                 @if (session('success'))
 
