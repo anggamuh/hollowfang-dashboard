@@ -10,6 +10,7 @@ use App\Services\BotStatusHistory;
 class ControlCenter extends Component
 {
     public string $activeMenu = 'overview';
+    public string $webhookTab = 'announcements';
 
     public array $menus = [
         'overview' => 'Overview',
@@ -29,6 +30,13 @@ class ControlCenter extends Component
     {
         if (array_key_exists($menu, $this->menus)) {
             $this->activeMenu = $menu;
+        }
+    }
+
+    public function changeWebhookTab(string $tab): void
+    {
+        if (in_array($tab, ['announcements', 'webhooks'], true)) {
+            $this->webhookTab = $tab;
         }
     }
 
