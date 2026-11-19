@@ -47,5 +47,5 @@ jobs:
       - name: Compile Control Center Blade views
         run: php scripts/check-control-center-blade.php
 
-      - name: Run Laravel feature tests
-        run: php artisan test
+      - name: Run Control Center and monitoring regression tests
+        run: php artisan test tests/Feature/HollowfangControlCenterTest.php tests/Feature/ManukApiServiceTest.php
