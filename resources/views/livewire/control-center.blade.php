@@ -673,6 +673,108 @@
                         </div>
                     </div>
 
+                {{-- DISCORD GATEWAY: real read-only data from /api/health --}}
+                @elseif ($activeMenu === 'gateway')
+                    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        @foreach ([
+                            ['Gateway', $gatewayConnected ? 'CONNECTED' : 'UNKNOWN', $gatewayConnected ? 'Koneksi Discord aktif' : 'Status tidak tersedia'],
+                            ['Ping', $botPing !== null ? $botPing.' ms' : '—', 'Latensi WebSocket'],
+                            ['Guild', $guildName ?: '—', $guildId ?: 'ID tidak tersedia'],
+                            ['Members', $guildMembers ?? '—', 'Member count dari Discord'],
+                        ] as [$title, $value, $description])
+                            <article class="rounded-2xl border border-white/10 bg-[#191a23] p-5">
+                                <p class="text-xs uppercase tracking-wider text-zinc-500">{{ $title }}</p>
+                                <p class="mt-3 break-words text-xl font-bold text-white">{{ $value }}</p>
+                                <p class="mt-2 break-all text-xs text-zinc-500">{{ $description }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+                    <div class="grid gap-5 xl:grid-cols-2">
+                        <section class="rounded-2xl border border-violet-400/15 bg-[#191822] p-6">
+                            <p class="text-xs font-bold uppercase tracking-[.25em] text-violet-300">Gateway Connection</p>
+                            <h3 class="mt-2 text-xl font-semibold text-white">Status Discord</h3>
+                            <dl class="mt-5 space-y-4 text-sm">
+                                <div class="flex justify-between gap-3 border-b border-white/5 pb-3"><dt class="text-zinc-500">Bot Account</dt><dd class="text-right text-white">{{ $botConnected ? $botName : 'Tidak tersedia' }}</dd></div>
+                                <div class="flex justify-between gap-3 border-b border-white/5 pb-3"><dt class="text-zinc-500">Guild ID</dt><dd class="break-all text-right font-mono text-xs text-zinc-300">{{ $guildId ?: '—' }}</dd></div>
+                                <div class="flex justify-between gap-3 border-b border-white/5 pb-3"><dt class="text-zinc-500">Uptime</dt><dd class="text-right text-white">{{ $botUptime }}</dd></div>
+                                <div class="flex justify-between gap-3"><dt class="text-zinc-500">Member Online</dt><dd class="text-right text-zinc-300">{{ $onlineMembers ?? 'Belum tersedia dari monitoring API' }}</dd></div>
+                            </dl>
+                        </section>
+                        <section class="rounded-2xl border border-white/10 bg-[#191a23] p-6">
+                            <p class="text-xs font-bold uppercase tracking-[.25em] text-violet-300">Connection Diagnostics</p>
+                            <h3 class="mt-2 text-xl font-semibold text-white">Kesehatan Integrasi</h3>
+                            <div class="mt-5 space-y-3">
+                                @foreach ([
+                                    ['Monitoring API', $botConnected ? 'Connected' : strtoupper(str_replace('_', ' ', $apiStatus))],
+                                    ['Discord Gateway', $gatewayConnected ? 'Connected' : 'Unknown'],
+                                    ['Lavalink', $lavalinkConnected ? 'Connected' : $lavalinkStatus],
+                                ] as [$name, $state])
+                                    <div class="flex justify-between gap-4 rounded-xl border border-white/5 bg-[#11121b] px-4 py-3 text-sm">
+                                        <span class="text-zinc-400">{{ $name }}</span><span class="text-right text-zinc-100">{{ $state }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <p class="mt-5 text-xs leading-relaxed text-zinc-500">Monitoring hanya membaca status, tidak memiliki izin untuk mengubah gateway, voice, maupun konfigurasi bot.</p>
+                        </section>
+                    </div>
+
+                {{-- MUSIC MONITORING: no remote playback actions --}}
+                @elseif ($activeMenu === 'music')
+                    <div class="relative overflow-hidden rounded-3xl border border-violet-400/15 bg-gradient-to-br from-[#22162f] to-[#15151e] p-6 sm:p-8">
+                        <div class="pointer-events-none absolute -right-16 -top-28 h-72 w-72 rounded-full bg-violet-600/15 blur-3xl"></div>
+                        <p class="text-xs font-bold uppercase tracking-[.32em] text-violet-300">♫ Crypt · Music Sanctuary</p>
+                        <h3 class="mt-3 text-2xl font-semibold text-white">Live Music Monitoring</h3>
+                        <p class="mt-2 text-sm text-zinc-400">Lihat apa yang sedang diputar, antrean, dan status Lavalink. Tanpa perintah remote yang belum didukung bot.</p>
+                        <div class="relative mt-5 flex flex-wrap gap-2">
+                            <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300">{{ $nowPlaying ? ($musicPaused ? 'Ⅱ Paused' : '♫ Playing') : '◇ Idle' }}</span>
+                            <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300">Sessions: {{ $musicSessions ?? '—' }}</span>
+                            <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300">Queue: {{ $queueLength ?? '—' }}</span>
+                            <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300">Lavalink: {{ $lavalinkConnected ? 'Connected' : $lavalinkStatus }}</span>
+                        </div>
+                    </div>
+                    <div class="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+                        <section class="min-w-0 rounded-3xl border border-white/10 bg-[#191a22] p-6">
+                            <div class="flex flex-wrap items-center justify-between gap-3"><h4 class="text-lg font-semibold text-white">Now Playing</h4><span class="text-xs text-zinc-500">Realtime snapshot · 15s</span></div>
+                            @if ($nowPlaying)
+                                <div class="mt-6 flex items-start gap-5">
+                                    <div class="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border border-violet-400/20 bg-violet-500/10 text-5xl text-violet-300">♫</div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="break-words text-xl font-semibold text-white">{{ data_get($nowPlaying, 'title', 'Unknown track') }}</p>
+                                        <p class="mt-2 break-words text-sm text-zinc-400">{{ data_get($nowPlaying, 'artist', 'Unknown artist') }}</p>
+                                        <p class="mt-3 text-xs text-violet-300">{{ data_get($nowPlaying, 'source', 'Unknown') }} · {{ $musicPaused ? 'Paused' : 'Playing' }}</p>
+                                    </div>
+                                </div>
+                                @if ($trackProgress !== null)
+                                    <div class="mt-8 h-2 overflow-hidden rounded-full bg-white/10"><div class="h-full rounded-full bg-gradient-to-r from-violet-700 to-fuchsia-400" style="width: {{ $trackProgress }}%"></div></div>
+                                    <div class="mt-2 flex justify-between text-xs text-zinc-500"><span>{{ gmdate('i:s', (int) floor($trackPositionMs / 1000)) }}</span><span>{{ gmdate('i:s', (int) floor($trackDurationMs / 1000)) }}</span></div>
+                                @endif
+                            @else
+                                <div class="mt-6 flex min-h-48 flex-col items-center justify-center rounded-2xl border border-dashed border-violet-400/15 bg-white/[.02] p-7 text-center">
+                                    <span class="text-4xl text-violet-400/50">♫</span>
+                                    <p class="mt-4 text-sm font-medium text-zinc-300">{{ $botConnected ? 'Tidak ada lagu aktif' : 'Monitoring belum terkoneksi' }}</p>
+                                    <p class="mt-2 text-xs text-zinc-500">Gunakan command musik di Discord untuk memulai sesi.</p>
+                                </div>
+                            @endif
+                            <div class="mt-6 flex justify-between gap-3 border-t border-white/10 pt-4 text-xs text-zinc-500"><span>Voice channel ID</span><span class="break-all text-right font-mono">{{ $voiceChannelId ?: '—' }}</span></div>
+                        </section>
+                        <section class="min-w-0 rounded-3xl border border-white/10 bg-[#191a22] p-6">
+                            <div class="flex justify-between gap-3"><h4 class="text-lg font-semibold text-white">Up Next</h4><span class="text-xs text-zinc-500">{{ $queueLength ?? '—' }} track</span></div>
+                            <div class="mt-5 space-y-2">
+                                @forelse ($queuePreview as $index => $track)
+                                    <div class="flex items-center gap-3 rounded-xl border border-white/5 bg-[#12131b] p-3">
+                                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-400/10 text-sm font-semibold text-violet-300">{{ $index + 1 }}</div>
+                                        <div class="min-w-0"><p class="break-words text-sm font-medium text-zinc-200">{{ data_get($track, 'title', 'Unknown') }}</p><p class="mt-1 break-words text-xs text-zinc-500">{{ data_get($track, 'artist', 'Unknown artist') }}</p></div>
+                                    </div>
+                                @empty
+                                    <div class="rounded-2xl border border-dashed border-white/10 p-8 text-center text-sm text-zinc-500">Belum ada lagu di antrean.</div>
+                                @endforelse
+                                @if (is_numeric($queueLength) && $queueLength > count($queuePreview))
+                                    <p class="pt-2 text-xs text-zinc-500">Menampilkan {{ count($queuePreview) }} dari {{ $queueLength }} lagu.</p>
+                                @endif
+                            </div>
+                        </section>
+                    </div>
+
                 {{-- WEBHOOKS & EMBEDS --}}
                 @elseif ($activeMenu === 'webhooks')
 
