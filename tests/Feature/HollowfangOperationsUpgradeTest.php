@@ -76,4 +76,36 @@ class HollowfangOperationsUpgradeTest extends TestCase
 
         Http::assertNotSent(fn ($request) => $request->method() === 'POST');
     }
+
+    public function test_owner_can_send_authenticated_music_action(): void
+    {
+        $user = $this->owner();
+        $this->actingAs($user);
+        Http::fake([
+            '127.0.0.1:3210/api/health' => Http::response(['bot' => ['connected' => true]]),
+            '127.0.0.1:3210/api/music/control' => Http::response(['ok' => true]),
+        ]);
+
+        Livewire::test(ControlCenter::class)
+            ->call('changeMenu', 'music')
+            ->call('controlMusic', 'pause')
+            ->assertSet('musicError', '')
+            ->assertSee('berhasil dijalankan');
+
+        Http::assertSent(fn ($request) => $request->method() === 'POST'
+            && str_ends_with($request->url(), '/api/music/control')
+            && $request['actor'] === '111111111111111111'
+            && $request['action'] === 'pause');
+    }
+
+    public function test_music_control_rejects_unknown_action_without_posting(): void
+    {
+        $this->actingAs($this->owner());
+
+        Livewire::test(ControlCenter::class)
+            ->call('controlMusic', 'ban_everyone')
+            ->assertSet('musicError', 'Aksi musik tidak dikenali.');
+
+        Http::assertNotSent(fn ($request) => $request->method() === 'POST');
+    }
 }
