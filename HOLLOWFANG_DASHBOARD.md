@@ -55,7 +55,7 @@ Repo memiliki beberapa **test Laravel starter-kit lama** untuk login/password/se
 ## Upgrade Operations November 2026
 
 - **Webhooks & Embeds** kini memiliki dua tab: *Bot Announcements* dan *Discord Webhook Manager*. Manager menyimpan URL webhook terenkripsi memakai `APP_KEY` Laravel dan mencatat pengiriman.
-- **Music Remote Control** mengirim perintah Pause, Resume, Skip, Shuffle, Autoplay, dan Loop dari owner yang terhubung ke Discord. Perintah benar-benar dikirim ke `POST /api/music/control`; butuh [PR bot ManukAPP terkait](https://github.com/anggamuh/spike-discord-bot/pulls) diterapkan dan proses bot direstart.
+- **Music Remote Control** mengirim perintah Pause, Resume, Skip, Shuffle, Autoplay, dan Loop dari owner yang terhubung ke Discord. Perintah benar-benar dikirim ke `POST /api/music/control`; butuh [PR bot ManukAPP #24](https://github.com/anggamuh/spike-discord-bot/pull/24) diterapkan dan proses bot direstart.
 - **Moderation / Roles / Events** diberi pembatasan mutasi 5 aksi/menit per jenis; role yang tidak muncul dalam daftar bot atau managed tidak dapat diubah dari dashboard. Bot tetap memvalidasi role hierarchy dan izin Discord.
 - **Community Control** memakai `MANUK_V4_API_PORT` yang bisa diubah dan memeriksa pilihan role ketika mengirim panel self-role.
 - **Mobile**: tab V3 kini dapat digulir secara horizontal pada layar kecil.
