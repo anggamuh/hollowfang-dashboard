@@ -815,8 +815,23 @@
 
                 {{-- WEBHOOKS & EMBEDS --}}
                 @elseif ($activeMenu === 'webhooks')
-
-                   <livewire:announcement-manager />
+                    <div class="space-y-5">
+                        <div class="rounded-2xl border border-white/10 bg-[#191a21] p-4 sm:p-5">
+                            <h3 class="font-semibold text-white">Announcements & Discord Webhooks</h3>
+                            <p class="mt-1 text-xs text-zinc-400">Kirim pengumuman lewat bot atau gunakan webhook Discord tersimpan. Keduanya memakai autentikasi Owner.</p>
+                            <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="Pilih jenis pengiriman">
+                                <button type="button" wire:click="changeWebhookTab('announcements')" aria-pressed="{{ $webhookTab === 'announcements' ? 'true' : 'false' }}"
+                                    @class(['rounded-xl px-4 py-2.5 text-sm font-medium transition', 'bg-violet-700 text-white' => $webhookTab === 'announcements', 'border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10' => $webhookTab !== 'announcements'])>Bot Announcements</button>
+                                <button type="button" wire:click="changeWebhookTab('webhooks')" aria-pressed="{{ $webhookTab === 'webhooks' ? 'true' : 'false' }}"
+                                    @class(['rounded-xl px-4 py-2.5 text-sm font-medium transition', 'bg-violet-700 text-white' => $webhookTab === 'webhooks', 'border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10' => $webhookTab !== 'webhooks'])>Discord Webhook Manager</button>
+                            </div>
+                        </div>
+                        @if ($webhookTab === 'announcements')
+                            <livewire:announcement-manager :key="'announcements-module'" />
+                        @else
+                            <livewire:webhook-manager :key="'webhooks-module'" />
+                        @endif
+                    </div>
 
                 {{-- HOLLOWFANG_V3_INTEGRATED --}}
                 @elseif (in_array($activeMenu, ['moderation', 'members', 'events', 'logs'], true))
