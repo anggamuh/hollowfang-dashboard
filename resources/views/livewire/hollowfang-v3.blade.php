@@ -136,8 +136,38 @@
         @endif
 
     @elseif ($tab === 'logs')
+        <div class="rounded-2xl border border-violet-400/15 bg-[#191a21] p-4 sm:p-5">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h3 class="font-semibold text-white">Audit Explorer</h3>
+                    <p class="mt-1 text-xs text-zinc-400">Cari tindakan, actor, target, atau alasan. Ekspor hanya dari maksimal 100 catatan terbaru yang disediakan API V3.</p>
+                </div>
+                <button type="button" wire:click="exportAuditCsv" wire:loading.attr="disabled" wire:target="exportAuditCsv"
+                    class="rounded-xl border border-violet-400/25 bg-violet-500/15 px-4 py-2.5 text-sm font-semibold text-violet-100 hover:bg-violet-500/25 disabled:opacity-50">
+                    <span wire:loading.remove wire:target="exportAuditCsv">↓ Export CSV</span>
+                    <span wire:loading wire:target="exportAuditCsv">Menyiapkan CSV...</span>
+                </button>
+            </div>
+            <div class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_210px]">
+                <label class="block text-xs text-zinc-400">Cari audit
+                    <input type="search" wire:model.live.debounce.350ms="auditSearch" maxlength="100" placeholder="Aksi, ID Discord, atau alasan..."
+                        class="mt-1 w-full rounded-xl border border-white/10 bg-[#101116] p-3 text-sm text-white outline-none focus:border-violet-400/60" />
+                </label>
+                <label class="block text-xs text-zinc-400">Kategori
+                    <select wire:model.live="auditCategory" class="mt-1 w-full rounded-xl border border-white/10 bg-[#101116] p-3 text-sm text-white outline-none focus:border-violet-400/60">
+                        <option value="all">Semua tindakan</option>
+                        <option value="moderation">Moderation</option>
+                        <option value="role">Members & Roles</option>
+                        <option value="event">Events</option>
+                    </select>
+                </label>
+            </div>
+            <p class="mt-3 text-xs text-zinc-500">Menampilkan {{ count($filteredAuditLogs) }} dari {{ count($logs) }} log yang diterima. Waktu ekspor menggunakan UTC.</p>
+            @error('auditSearch')<p role="alert" class="mt-2 text-xs text-red-300">{{ $message }}</p>@enderror
+            @error('auditCategory')<p role="alert" class="mt-2 text-xs text-red-300">{{ $message }}</p>@enderror
+        </div>
         <div class="grid gap-4 xl:grid-cols-2">
-            <section class="rounded-2xl border border-white/10 bg-[#191a21] p-5"><h3 class="mb-4 font-semibold">Audit Tindakan</h3><div class="max-h-[620px] space-y-2 overflow-y-auto pr-1">@forelse($logs as $l)<div wire:key="audit-{{ $l['id'] }}" class="rounded-xl border border-white/5 bg-[#111218] p-3"><p class="text-sm font-medium text-violet-200">{{ $l['action'] ?? 'Action' }}</p><p class="mt-1 break-words text-xs text-zinc-400">{{ $l['detail'] ?? '' }}</p><p class="mt-2 break-all text-[11px] text-zinc-500">{{ $l['at'] ?? '' }} · Actor {{ $l['actor'] ?? '—' }} · Target {{ $l['target'] ?? '—' }}</p></div>@empty<p class="py-8 text-center text-sm text-zinc-500">Belum ada audit dari tindakan V3.</p>@endforelse</div></section>
+            <section class="rounded-2xl border border-white/10 bg-[#191a21] p-5"><h3 class="mb-4 font-semibold">Audit Tindakan</h3><div class="max-h-[620px] space-y-2 overflow-y-auto pr-1">@forelse($filteredAuditLogs as $l)<div wire:key="audit-{{ $l['id'] }}" class="rounded-xl border border-white/5 bg-[#111218] p-3"><p class="text-sm font-medium text-violet-200">{{ $l['action'] ?? 'Action' }}</p><p class="mt-1 break-words text-xs text-zinc-400">{{ $l['detail'] ?? '' }}</p><p class="mt-2 break-all text-[11px] text-zinc-500">{{ $l['at'] ?? '' }} · Actor {{ $l['actor'] ?? '—' }} · Target {{ $l['target'] ?? '—' }}</p></div>@empty<p class="py-8 text-center text-sm text-zinc-500">Tidak ada audit yang cocok dengan filter saat ini.</p>@endforelse</div></section>
             <section class="rounded-2xl border border-white/10 bg-[#191a21] p-5"><h3 class="mb-4 font-semibold">Riwayat Warning</h3><div class="max-h-[620px] space-y-2 overflow-y-auto pr-1">@forelse($warnings as $w)<div wire:key="warning-{{ $w['id'] }}" class="rounded-xl border border-white/5 bg-[#111218] p-3"><p class="break-words text-sm text-amber-200">{{ $w['reason'] ?? '—' }}</p><p class="mt-2 break-all text-[11px] text-zinc-500">{{ $w['at'] ?? '' }} · Target {{ $w['target'] ?? '—' }}</p></div>@empty<p class="py-8 text-center text-sm text-zinc-500">Belum ada warning.</p>@endforelse</div></section>
         </div>
 
