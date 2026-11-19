@@ -626,6 +626,10 @@
                 @elseif (in_array($activeMenu, ['moderation', 'members', 'events', 'logs'], true))
                     <livewire:hollowfang-v3 :initial-tab="match ($activeMenu) { 'members' => 'members', 'logs' => 'logs', 'events' => 'events', default => 'moderation' }" :key="'hollowfang-v3-'.$activeMenu" />
 
+                {{-- HOLLOWFANG_V4_COMMUNITY --}}
+                @elseif ($activeMenu === 'community')
+                    <livewire:hollowfang-community :key="'hf-community'" />
+
                 {{-- OTHER MODULES --}}
                 @else
 
