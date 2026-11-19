@@ -762,7 +762,7 @@
                         <div class="pointer-events-none absolute -right-16 -top-28 h-72 w-72 rounded-full bg-violet-600/15 blur-3xl"></div>
                         <p class="text-xs font-bold uppercase tracking-[.32em] text-violet-300">♫ Crypt · Music Sanctuary</p>
                         <h3 class="mt-3 text-2xl font-semibold text-white">Live Music Monitoring</h3>
-                        <p class="mt-2 text-sm text-zinc-400">Lihat apa yang sedang diputar, antrean, dan status Lavalink. Tanpa perintah remote yang belum didukung bot.</p>
+                        <p class="mt-2 text-sm text-zinc-400">Lihat lagu, antrean, dan status Lavalink serta kontrol playback melalui API bot yang diperbarui.</p>
                         <div class="relative mt-5 flex flex-wrap gap-2">
                             <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300">{{ $nowPlaying ? ($musicPaused ? 'Ⅱ Paused' : '♫ Playing') : '◇ Idle' }}</span>
                             <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300">Sessions: {{ $musicSessions ?? '—' }}</span>
@@ -770,6 +770,34 @@
                             <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300">Lavalink: {{ $lavalinkConnected ? 'Connected' : $lavalinkStatus }}</span>
                         </div>
                     </div>
+                    <section class="rounded-3xl border border-violet-400/15 bg-[#191a22] p-5 sm:p-6" aria-labelledby="hf-music-controls">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <h4 id="hf-music-controls" class="text-lg font-semibold text-white">Music Remote Control</h4>
+                                <p class="mt-1 text-xs text-zinc-400">Kontrol pemutaran untuk Owner/Admin Discord. Membutuhkan endpoint /api/music/control di bot ManukAPP versi terbaru.</p>
+                            </div>
+                            <span class="rounded-full border border-violet-400/15 bg-violet-500/10 px-3 py-1 text-xs text-violet-200">Owner only · 10 aksi/menit</span>
+                        </div>
+                        @if ($musicFeedback)
+                            <p role="status" class="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-200">{{ $musicFeedback }}</p>
+                        @endif
+                        @if ($musicError)
+                            <p role="alert" class="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">{{ $musicError }}</p>
+                        @endif
+                        <div class="mt-5 flex flex-wrap gap-2">
+                            @foreach ([
+                                ['pause', 'Ⅱ Pause'], ['resume', '▶ Resume'], ['skip', '⇥ Skip'],
+                                ['shuffle', '⤨ Shuffle'], ['autoplay_on', 'Autoplay ON'], ['autoplay_off', 'Autoplay OFF'],
+                                ['loop_off', 'Loop OFF'], ['loop_song', 'Loop Song'], ['loop_queue', 'Loop Queue'],
+                            ] as [$action, $label])
+                                <button type="button" wire:click="controlMusic('{{ $action }}')"
+                                    @if ($action === 'skip') wire:confirm="Lewati lagu yang sedang diputar?" @endif
+                                    wire:loading.attr="disabled" wire:target="controlMusic"
+                                    @disabled(! $botConnected)
+                                    class="rounded-xl border border-violet-400/20 bg-violet-500/10 px-4 py-2.5 text-sm font-medium text-violet-100 transition hover:bg-violet-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400 disabled:cursor-not-allowed disabled:opacity-40">{{ $label }}</button>
+                            @endforeach
+                        </div>
+                    </section>
                     <div class="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
                         <section class="min-w-0 rounded-3xl border border-white/10 bg-[#191a22] p-6">
                             <div class="flex flex-wrap items-center justify-between gap-3"><h4 class="text-lg font-semibold text-white">Now Playing</h4><span class="text-xs text-zinc-500">Realtime snapshot · 15s</span></div>
@@ -830,7 +858,7 @@
                             </article>
                         @endforeach
                     </div>
-                    <p class="text-xs text-zinc-500">Kontrol dijalankan melalui slash command Discord. API monitoring bot saat ini hanya mendukung pembacaan status; dashboard tidak mengirim perintah playback yang belum didukung.</p>
+                    <p class="text-xs text-zinc-500">Slash command Discord tetap tersedia. Tombol remote memerlukan bot ManukAPP yang sudah menjalankan endpoint kontrol baru.</p>
 
                 {{-- WEBHOOKS & EMBEDS --}}
                 @elseif ($activeMenu === 'webhooks')
