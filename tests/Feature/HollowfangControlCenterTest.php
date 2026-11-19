@@ -20,6 +20,11 @@ class HollowfangControlCenterTest extends TestCase
         config()->set('hollowfang.owner_discord_ids', ['111111111111111111']);
         config()->set('services.manuk.base_url', 'http://127.0.0.1:3210');
         config()->set('services.manuk.token', str_repeat('x', 40));
+
+    }
+
+    private function fakeOnline(): void
+    {
         Http::fake(['127.0.0.1:3210/api/health' => Http::response([
             'bot' => ['connected' => true, 'name' => 'crypt', 'ping_ms' => 24, 'uptime_seconds' => 300],
             'discord' => ['connected' => true, 'guild_id' => '222222222222222222', 'guild_name' => 'Hollowfang', 'total_members' => 65, 'online_members' => null],
@@ -47,6 +52,7 @@ class HollowfangControlCenterTest extends TestCase
 
     public function test_owner_can_open_live_overview_without_fake_statistics(): void
     {
+        $this->fakeOnline();
         $this->actingAs($this->owner())->get('/control')
             ->assertOk()
             ->assertSee('Music Test')
@@ -56,6 +62,7 @@ class HollowfangControlCenterTest extends TestCase
 
     public function test_owner_can_open_music_gateway_and_settings_tabs(): void
     {
+        $this->fakeOnline();
         $this->actingAs($this->owner());
 
         Livewire::test(ControlCenter::class)
