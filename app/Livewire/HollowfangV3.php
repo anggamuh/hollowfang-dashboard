@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 use Throwable;
 
@@ -30,6 +31,17 @@ class HollowfangV3 extends Component
     public array $channels = [];
     public string $errorMessage = '';
     public string $successMessage = '';
+
+    private function enforceActionLimit(string $action): bool
+    {
+        $key = 'hollowfang:v3:'.$action.':'.auth()->id();
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $this->errorMessage = 'Terlalu banyak aksi. Coba kembali dalam satu menit.';
+            return false;
+        }
+        RateLimiter::hit($key, 60);
+        return true;
+    }
 
     private function guardOwner(): void
     {
@@ -117,6 +129,11 @@ class HollowfangV3 extends Component
             'reason' => ['required', 'string', 'min:3', 'max:300'],
             'minutes' => ['integer', 'min:1', 'max:40320'],
         ]);
+        if (! $this->enforceActionLimit('moderation')) return;
+        if ($data['targetId'] === (string) auth()->user()->discord_id) {
+            $this->errorMessage = 'Tidak bisa memoderasi akun sendiri.';
+            return;
+        }
         $data['targetId'] = (string) $data['targetId'];
         $data['actor'] = (string) auth()->user()->discord_id;
         $this->errorMessage = ''; $this->successMessage = '';
@@ -137,6 +154,11 @@ class HollowfangV3 extends Component
             'roleId' => ['required', 'regex:/^\d{15,22}$/'],
             'roleOperation' => ['required', 'in:add,remove'],
         ]);
+        if (! $this->enforceActionLimit('roles')) return;
+        if (! collect($this->roles)->contains(fn ($role) => (string) ($role['id'] ?? '') === $data['roleId'] && ! ($role['managed'] ?? false))) {
+            $this->errorMessage = 'Role tidak tersedia atau dikelola integrasi Discord.';
+            return;
+        }
         $this->errorMessage = ''; $this->successMessage = '';
         $result = $this->requestApi('POST', '/api/v3/role', [
             'actor' => (string) auth()->user()->discord_id,
@@ -155,6 +177,7 @@ class HollowfangV3 extends Component
     {
         $this->guardOwner();
         if (! preg_match('/^[a-f0-9-]{36}$/i', $id)) return;
+        if (! $this->enforceActionLimit('events')) return;
         $this->errorMessage = ''; $this->successMessage = '';
         $result = $this->requestApi('POST', '/api/v3/events/cancel', [
             'actor' => (string) auth()->user()->discord_id,
@@ -177,6 +200,7 @@ class HollowfangV3 extends Component
             'eventAt' => ['required', 'date', 'after:now'],
         ]);
         if (! isset($this->channels[$this->eventChannelId])) { $this->errorMessage = 'Channel harus ada di allowlist Announcements.'; return; }
+        if (! $this->enforceActionLimit('events')) return;
         $payload = [
             'actor' => (string) auth()->user()->discord_id,
             'title' => $data['eventTitle'],
