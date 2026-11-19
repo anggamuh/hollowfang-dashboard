@@ -11,18 +11,23 @@ use App\Http\Middleware\EnsureHollowfangAccess;
 |--------------------------------------------------------------------------
 */
 
-Route::view('/', 'welcome')->name('home');
+// Route to the actual Hollowfang app rather than missing starter-kit views.
+Route::get('/', function () {
+    if (! auth()->check()) {
+        return redirect()->route('discord.login');
+    }
 
-/*
-|--------------------------------------------------------------------------
-| Laravel Starter Kit
-|--------------------------------------------------------------------------
-*/
+    if (! auth()->user()->discord_id) {
+        return redirect()->route('discord.connect');
+    }
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('/dashboard', 'dashboard')
-        ->name('dashboard');
-});
+    return redirect()->route('control');
+})->name('home');
+
+// Keep the starter-kit URL as a backwards-compatible entry point.
+Route::middleware('auth')->get('/dashboard', function () {
+    return redirect()->route('control');
+})->name('dashboard');
 
 require __DIR__.'/settings.php';
 
