@@ -79,3 +79,15 @@ php scripts/check-control-center-blade.php
 ```
 
 Sebelum deploy jalankan `php artisan migrate --force`, khususnya untuk tabel `hollowfang_webhooks` dan `hollowfang_webhook_dispatches` jika belum dibuat.
+
+## Audit Explorer (November 2026)
+
+Menu **Audit Logs** sekarang memiliki pencarian case-insensitive pada action, actor ID, target ID, keterangan, dan waktu; filter kategori *Moderation*, *Members & Roles*, dan *Events*; serta tombol **Export CSV**.
+
+Ekspor mengunduh maksimal **100 entri terbaru** dari endpoint ManukAPP V3 `GET /api/v3/logs`, bukan seluruh riwayat. Daftar warning tetap terpisah. CSV memakai UTF-8 BOM dan menetralkan awalan formula spreadsheet serta mempertahankan snowflake Discord agar Excel tidak membulatkan ID. Waktu menggunakan UTC. Hanya Owner yang terautentikasi dapat mengekspor; API di-query ulang pada saat ekspor.
+
+Jalankan:
+```bash
+php artisan test tests/Unit/HollowfangAuditTest.php tests/Feature/HollowfangAuditExportTest.php
+php scripts/check-control-center-blade.php
+```

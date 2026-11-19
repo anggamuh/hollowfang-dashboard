@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Support\HollowfangAudit;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
@@ -15,6 +16,8 @@ class HollowfangV3 extends Component
     public array $logs = [];
     public array $events = [];
     public array $warnings = [];
+    public string $auditSearch = '';
+    public string $auditCategory = 'all';
     public array $roles = [];
     public string $roleId = '';
     public string $roleOperation = 'add';
@@ -112,6 +115,52 @@ class HollowfangV3 extends Component
                 } catch (Throwable $e) { /* Event list remains usable without directory */ }
             }
         }
+    }
+
+    public function updatedAuditSearch(): void
+    {
+        $this->guardOwner();
+        $this->auditSearch = mb_substr($this->auditSearch, 0, 100);
+    }
+
+    public function exportAuditCsv()
+    {
+        $this->guardOwner();
+        if ($this->tab !== 'logs') {
+            abort(403);
+        }
+
+        $this->validate([
+            'auditSearch' => ['nullable', 'string', 'max:100'],
+            'auditCategory' => ['required', 'in:all,moderation,role,event'],
+        ]);
+
+        // Query the authoritative V3 endpoint again rather than exporting a
+        // possibly stale, Livewire-hydrated public property.
+        $data = $this->requestApi('GET', '/api/v3/logs');
+        if ($data === null || ! is_array($data['logs'] ?? null)) {
+            $this->errorMessage = 'Gagal mengambil audit terbaru untuk ekspor.';
+            return null;
+        }
+
+        $rows = HollowfangAudit::filter(
+            array_slice($data['logs'], 0, 100),
+            $this->auditSearch,
+            $this->auditCategory
+        );
+
+        return response()->streamDownload(static function () use ($rows): void {
+            $stream = fopen('php://output', 'wb');
+            if ($stream === false) {
+                return;
+            }
+            HollowfangAudit::writeCsv($stream, $rows);
+            fclose($stream);
+        }, 'hollowfang-audit-'.now()->format('Ymd-His').'.csv', [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Cache-Control' => 'no-store, private',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function selectTarget(string $id): void
@@ -218,5 +267,12 @@ class HollowfangV3 extends Component
         }
     }
 
-    public function render() { return view('livewire.hollowfang-v3'); }
+    public function render()
+    {
+        $this->guardOwner();
+
+        return view('livewire.hollowfang-v3', [
+            'filteredAuditLogs' => HollowfangAudit::filter($this->logs, $this->auditSearch, $this->auditCategory),
+        ]);
+    }
 }

@@ -38,6 +38,10 @@ jobs:
       # Pint violations. Keep CI focused on runtime correctness and compiled views.
       - name: Check changed PHP syntax
         run: |
+          php -l app/Support/HollowfangAudit.php
+          php -l app/Livewire/HollowfangV3.php
+          php -l tests/Unit/HollowfangAuditTest.php
+          php -l tests/Feature/HollowfangAuditExportTest.php
           php -l app/Services/ManukApiService.php
           php -l app/Livewire/ControlCenter.php
           php -l database/migrations/0001_01_01_000000_create_users_table.php
@@ -48,4 +52,4 @@ jobs:
         run: php scripts/check-control-center-blade.php
 
       - name: Run Control Center and monitoring regression tests
-        run: php artisan test tests/Feature/HollowfangControlCenterTest.php tests/Feature/ManukApiServiceTest.php
+        run: php artisan test tests/Feature/HollowfangControlCenterTest.php tests/Feature/ManukApiServiceTest.php tests/Unit/HollowfangAuditTest.php tests/Feature/HollowfangAuditExportTest.php
