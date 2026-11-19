@@ -30,6 +30,12 @@ class ControlCenter extends Component
         }
     }
 
+    public function refreshNow(): void
+    {
+        // A Livewire round-trip re-reads the monitoring snapshot through render().
+        // This operation is read-only and does not issue any Discord commands.
+    }
+
     public function render()
     {
         return view('livewire.control-center', [
