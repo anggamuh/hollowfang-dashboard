@@ -51,3 +51,31 @@ php scripts/check-control-center-blade.php
 ## Batasan yang masih ada
 
 Repo memiliki beberapa **test Laravel starter-kit lama** untuk login/password/settings yang belum sesuai dengan file view dan komponen yang tersedia. PR ini tidak mengganti mekanisme OAuth, mereset password, atau mengaktifkan kontrol bot tambahan. CI memakai pengujian Control Center dan Monitoring yang scoped; masalah starter-kit harus dibereskan sebagai pekerjaan terpisah sebelum menyatakan seluruh aplikasi bebas masalah.
+
+## Upgrade Operations November 2026
+
+- **Webhooks & Embeds** kini memiliki dua tab: *Bot Announcements* dan *Discord Webhook Manager*. Manager menyimpan URL webhook terenkripsi memakai `APP_KEY` Laravel dan mencatat pengiriman.
+- **Music Remote Control** mengirim perintah Pause, Resume, Skip, Shuffle, Autoplay, dan Loop dari owner yang terhubung ke Discord. Perintah benar-benar dikirim ke `POST /api/music/control`; butuh [PR bot ManukAPP #24](https://github.com/anggamuh/spike-discord-bot/pull/24) diterapkan dan proses bot direstart.
+- **Moderation / Roles / Events** diberi pembatasan mutasi 5 aksi/menit per jenis; role yang tidak muncul dalam daftar bot atau managed tidak dapat diubah dari dashboard. Bot tetap memvalidasi role hierarchy dan izin Discord.
+- **Community Control** memakai `MANUK_V4_API_PORT` yang bisa diubah dan memeriksa pilihan role ketika mengirim panel self-role.
+- **Mobile**: tab V3 kini dapat digulir secara horizontal pada layar kecil.
+- **Music Monitoring** tidak menampilkan progress 0% saat posisi lagu sebenarnya tidak tersedia.
+
+Tambahkan (atau sesuaikan) konfigurasi bot lokal:
+
+```dotenv
+MANUK_V3_API_PORT=3212
+MANUK_V4_API_PORT=3213
+MANUK_ANNOUNCE_API_URL=http://127.0.0.1:3211
+```
+
+API kontrol musik menggunakan `MANUK_API_BASE_URL` yang sama dengan monitoring (default port 3210). Jangan mengekspos port ini publik; gunakan jaringan privat atau HTTPS reverse proxy dengan autentikasi. Fitur kontrol hanya bekerja bila dashboard dapat menjangkau bot dan `MANUK_API_TOKEN` cocok.
+
+Pengujian fokus:
+
+```bash
+php artisan test tests/Feature/HollowfangOperationsUpgradeTest.php tests/Feature/HollowfangControlCenterTest.php tests/Feature/ManukApiServiceTest.php
+php scripts/check-control-center-blade.php
+```
+
+Sebelum deploy jalankan `php artisan migrate --force`, khususnya untuk tabel `hollowfang_webhooks` dan `hollowfang_webhook_dispatches` jika belum dibuat.

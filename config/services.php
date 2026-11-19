@@ -27,6 +27,8 @@ return [
     'manuk' => [
         'base_url' => env('MANUK_API_BASE_URL'),
         'token' => env('MANUK_API_TOKEN'),
+        'v3_port' => env('MANUK_V3_API_PORT', 3212),
+        'v4_port' => env('MANUK_V4_API_PORT', 3213),
     ],
     
     'resend' => [

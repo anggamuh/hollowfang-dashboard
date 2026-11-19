@@ -33,8 +33,8 @@ class HollowfangCommunity extends Component
         if (strlen($token) < 32) { $this->errorMessage = 'Token ManukAPP belum valid.'; return null; }
         try {
             $http = Http::acceptJson()->withToken($token)->withoutRedirecting()->connectTimeout(2)->timeout(10);
-            $port = $path === '/api/announcements/directory' ? (int) parse_url((string) config('hollowfang_announcements.url'), PHP_URL_PORT) : 3213;
-            $port = $port > 0 && $port <= 65535 ? $port : 3213;
+            $port = $path === '/api/announcements/directory' ? (int) parse_url((string) config('hollowfang_announcements.url'), PHP_URL_PORT) : (int) config('services.manuk.v4_port', 3213);
+            if ($port < 1 || $port > 65535) { $this->errorMessage = 'Port API ManukAPP tidak valid.'; return null; }
             $base = 'http://127.0.0.1:'.$port;
             $response = $method === 'POST' ? $http->post($base.$path, $data) : $http->get($base.$path, $data);
             if (! $response->successful()) {
@@ -115,6 +115,8 @@ class HollowfangCommunity extends Component
     {
         $this->guardOwner();
         $this->errorMessage = '';
+        $this->successMessage = '';
+        $this->resetErrorBag();
         // Simpan konfigurasi terbaru sebelum mengirim preview.
         $this->saveSettings();
         if ($this->errorMessage !== '' || $this->getErrorBag()->isNotEmpty()) return;
@@ -134,7 +136,10 @@ class HollowfangCommunity extends Component
         $this->validate(['panelChannelId' => ['required', 'regex:/^\d{15,22}$/']]);
         if (! isset($this->channels[$this->panelChannelId])) { $this->errorMessage = 'Channel tidak ditemukan.'; return; }
         if (! in_array($kind, ['ticket', 'role'], true)) return;
-        if ($kind === 'role') $this->validate(['panelRoleId' => ['required', 'regex:/^\d{15,22}$/']]);
+        if ($kind === 'role') {
+            $this->validate(['panelRoleId' => ['required', 'regex:/^\d{15,22}$/']]);
+            if (! isset($this->roles[$this->panelRoleId])) { $this->errorMessage = 'Role tidak ditemukan.'; return; }
+        }
         $payload = ['actor' => (string) auth()->user()->discord_id, 'channelId' => $this->panelChannelId, 'roleId' => $this->panelRoleId];
         $result = $this->api('POST', $kind === 'ticket' ? '/api/v4/publish-ticket' : '/api/v4/publish-role', $payload);
         if (($result['ok'] ?? false) === true) {

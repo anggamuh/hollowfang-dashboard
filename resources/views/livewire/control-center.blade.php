@@ -50,7 +50,7 @@
         $musicPaused = data_get($botHealth, 'music.paused') === true;
         $trackDurationMs = data_get($nowPlaying, 'duration_ms');
         $trackPositionMs = data_get($nowPlaying, 'position_ms');
-        $trackProgress = is_numeric($trackDurationMs) && (float) $trackDurationMs > 0
+        $trackProgress = is_numeric($trackPositionMs) && is_numeric($trackDurationMs) && (float) $trackDurationMs > 0
             ? max(0, min(100, round(100 * (float) $trackPositionMs / (float) $trackDurationMs)))
             : null;
 
@@ -762,7 +762,7 @@
                         <div class="pointer-events-none absolute -right-16 -top-28 h-72 w-72 rounded-full bg-violet-600/15 blur-3xl"></div>
                         <p class="text-xs font-bold uppercase tracking-[.32em] text-violet-300">♫ Crypt · Music Sanctuary</p>
                         <h3 class="mt-3 text-2xl font-semibold text-white">Live Music Monitoring</h3>
-                        <p class="mt-2 text-sm text-zinc-400">Lihat apa yang sedang diputar, antrean, dan status Lavalink. Tanpa perintah remote yang belum didukung bot.</p>
+                        <p class="mt-2 text-sm text-zinc-400">Lihat lagu, antrean, dan status Lavalink serta kontrol playback melalui API bot yang diperbarui.</p>
                         <div class="relative mt-5 flex flex-wrap gap-2">
                             <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300">{{ $nowPlaying ? ($musicPaused ? 'Ⅱ Paused' : '♫ Playing') : '◇ Idle' }}</span>
                             <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300">Sessions: {{ $musicSessions ?? '—' }}</span>
@@ -770,6 +770,34 @@
                             <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300">Lavalink: {{ $lavalinkConnected ? 'Connected' : $lavalinkStatus }}</span>
                         </div>
                     </div>
+                    <section class="rounded-3xl border border-violet-400/15 bg-[#191a22] p-5 sm:p-6" aria-labelledby="hf-music-controls">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                                <h4 id="hf-music-controls" class="text-lg font-semibold text-white">Music Remote Control</h4>
+                                <p class="mt-1 text-xs text-zinc-400">Kontrol pemutaran untuk Owner/Admin Discord. Membutuhkan endpoint /api/music/control di bot ManukAPP versi terbaru.</p>
+                            </div>
+                            <span class="rounded-full border border-violet-400/15 bg-violet-500/10 px-3 py-1 text-xs text-violet-200">Owner only · 10 aksi/menit</span>
+                        </div>
+                        @if ($musicFeedback)
+                            <p role="status" class="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-200">{{ $musicFeedback }}</p>
+                        @endif
+                        @if ($musicError)
+                            <p role="alert" class="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">{{ $musicError }}</p>
+                        @endif
+                        <div class="mt-5 flex flex-wrap gap-2">
+                            @foreach ([
+                                ['pause', 'Ⅱ Pause'], ['resume', '▶ Resume'], ['skip', '⇥ Skip'],
+                                ['shuffle', '⤨ Shuffle'], ['autoplay_on', 'Autoplay ON'], ['autoplay_off', 'Autoplay OFF'],
+                                ['loop_off', 'Loop OFF'], ['loop_song', 'Loop Song'], ['loop_queue', 'Loop Queue'],
+                            ] as [$action, $label])
+                                <button type="button" wire:click="controlMusic('{{ $action }}')"
+                                    @if ($action === 'skip') wire:confirm="Lewati lagu yang sedang diputar?" @endif
+                                    wire:loading.attr="disabled" wire:target="controlMusic"
+                                    @disabled(! $botConnected)
+                                    class="rounded-xl border border-violet-400/20 bg-violet-500/10 px-4 py-2.5 text-sm font-medium text-violet-100 transition hover:bg-violet-500/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400 disabled:cursor-not-allowed disabled:opacity-40">{{ $label }}</button>
+                            @endforeach
+                        </div>
+                    </section>
                     <div class="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
                         <section class="min-w-0 rounded-3xl border border-white/10 bg-[#191a22] p-6">
                             <div class="flex flex-wrap items-center justify-between gap-3"><h4 class="text-lg font-semibold text-white">Now Playing</h4><span class="text-xs text-zinc-500">Realtime snapshot · 15s</span></div>
@@ -813,10 +841,44 @@
                         </section>
                     </div>
 
+                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Panduan kontrol musik Discord">
+                        @foreach ([
+                            ['/play', 'Putar lagu atau masukkan ke antrean'],
+                            ['/pause /resume', 'Jeda dan lanjutkan playback'],
+                            ['/skip /voteskip', 'Lewati lagu sesuai aturan DJ/voting'],
+                            ['/autoplay /loop', 'Atur rekomendasi dan pengulangan'],
+                            ['/queue /shuffle', 'Lihat dan acak antrean'],
+                            ['/remove /move', 'Kelola posisi lagu'],
+                            ['/247', 'Kelola mode musik 24/7'],
+                            ['/musicsettings', 'Pengaturan musik per server'],
+                        ] as [$command, $description])
+                            <article class="rounded-2xl border border-white/10 bg-[#191a22] p-4">
+                                <p class="font-mono text-sm font-semibold text-violet-200">{{ $command }}</p>
+                                <p class="mt-2 text-xs text-zinc-400">{{ $description }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+                    <p class="text-xs text-zinc-500">Slash command Discord tetap tersedia. Tombol remote memerlukan bot ManukAPP yang sudah menjalankan endpoint kontrol baru.</p>
+
                 {{-- WEBHOOKS & EMBEDS --}}
                 @elseif ($activeMenu === 'webhooks')
-
-                   <livewire:announcement-manager />
+                    <div class="space-y-5">
+                        <div class="rounded-2xl border border-white/10 bg-[#191a21] p-4 sm:p-5">
+                            <h3 class="font-semibold text-white">Announcements & Discord Webhooks</h3>
+                            <p class="mt-1 text-xs text-zinc-400">Kirim pengumuman lewat bot atau gunakan webhook Discord tersimpan. Keduanya memakai autentikasi Owner.</p>
+                            <div class="mt-4 flex flex-wrap gap-2" role="group" aria-label="Pilih jenis pengiriman">
+                                <button type="button" wire:click="changeWebhookTab('announcements')" aria-pressed="{{ $webhookTab === 'announcements' ? 'true' : 'false' }}"
+                                    @class(['rounded-xl px-4 py-2.5 text-sm font-medium transition', 'bg-violet-700 text-white' => $webhookTab === 'announcements', 'border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10' => $webhookTab !== 'announcements'])>Bot Announcements</button>
+                                <button type="button" wire:click="changeWebhookTab('webhooks')" aria-pressed="{{ $webhookTab === 'webhooks' ? 'true' : 'false' }}"
+                                    @class(['rounded-xl px-4 py-2.5 text-sm font-medium transition', 'bg-violet-700 text-white' => $webhookTab === 'webhooks', 'border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10' => $webhookTab !== 'webhooks'])>Discord Webhook Manager</button>
+                            </div>
+                        </div>
+                        @if ($webhookTab === 'announcements')
+                            <livewire:announcement-manager :key="'announcements-module'" />
+                        @else
+                            <livewire:webhook-manager :key="'webhooks-module'" />
+                        @endif
+                    </div>
 
                 {{-- HOLLOWFANG_V3_INTEGRATED --}}
                 @elseif (in_array($activeMenu, ['moderation', 'members', 'events', 'logs'], true))
