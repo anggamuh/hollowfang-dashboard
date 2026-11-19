@@ -13,8 +13,19 @@
 
         // Fallback saat API bot belum tersambung atau baru dimulai.
         $botHealth = $botHealth ?? [];
+        $apiStatus = data_get($botHealth, 'status', 'unconfigured');
+        $apiChecked = data_get($botHealth, 'checked_at');
+        $apiMessage = match ($apiStatus) {
+            'online' => 'Sinkronisasi monitoring berhasil.',
+            'unconfigured' => 'Isi MANUK_API_BASE_URL dan MANUK_API_TOKEN pada .env dashboard.',
+            'unauthorized' => 'Token API ditolak bot. Cocokkan MANUK_API_TOKEN di kedua aplikasi.',
+            'invalid_response' => 'Respons API tidak sesuai kontrak monitoring crypt.',
+            'http_error' => 'Endpoint /api/health mengembalikan HTTP error.',
+            'bot_offline' => 'API merespons tetapi Discord bot belum ready.',
+            default => 'API tidak terjangkau dari server Laravel. Periksa alamat host, port, dan jaringan.',
+        };
         $botConnected = data_get($botHealth, 'connected') === true;
-        $botName = data_get($botHealth, 'bot.name', 'ManukAPP');
+        $botName = data_get($botHealth, 'bot.name', 'crypt');
         $botPing = $botConnected ? data_get($botHealth, 'bot.ping_ms') : null;
         $uptimeSeconds = $botConnected ? data_get($botHealth, 'bot.uptime_seconds') : null;
         $botUptime = is_numeric($uptimeSeconds)
@@ -26,12 +37,16 @@
             : '—';
 
         $guildName = $botConnected ? data_get($botHealth, 'discord.guild_name') : null;
+        $gatewayConnected = $botConnected && data_get($botHealth, 'discord.connected') === true;
+        $guildId = $botConnected ? data_get($botHealth, 'discord.guild_id') : null;
+        $voiceChannelId = $botConnected ? data_get($botHealth, 'music.voice_channel_id') : null;
         $guildMembers = $botConnected ? data_get($botHealth, 'discord.total_members') : null;
         $onlineMembers = $botConnected ? data_get($botHealth, 'discord.online_members') : null;
         $musicSessions = $botConnected ? data_get($botHealth, 'music.active_sessions') : null;
         $nowPlaying = $botConnected ? data_get($botHealth, 'music.now_playing') : null;
         $queueLength = $botConnected ? data_get($botHealth, 'music.queue_length') : null;
         $queuePreview = $botConnected ? (data_get($botHealth, 'music.queue') ?? []) : [];
+        $queuePreview = is_array($queuePreview) ? array_slice($queuePreview, 0, 12) : [];
         $musicPaused = data_get($botHealth, 'music.paused') === true;
         $trackDurationMs = data_get($nowPlaying, 'duration_ms');
         $trackPositionMs = data_get($nowPlaying, 'position_ms');
@@ -55,10 +70,11 @@
     <div class="flex min-h-screen">
 
         {{-- SIDEBAR --}}
-        <aside class="hidden w-64 shrink-0 border-r border-white/10 bg-[#14151b] p-5 lg:block">
+        <aside class="sticky top-0 hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-violet-400/10 bg-[#111019] p-5 lg:block">
 
             {{-- BRAND --}}
-            <div class="mb-10">
+            <div class="mb-8 rounded-2xl border border-violet-400/15 bg-gradient-to-br from-violet-500/10 via-[#1a1228] to-transparent px-4 py-6">
+                <p class="mb-2 text-xs tracking-[.35em] text-violet-300">✦ THE HOLLOW</p>
 
                 <h1 class="text-xl font-bold tracking-widest text-white">
                     HOLLOWFANG
@@ -86,7 +102,7 @@
                                 => $activeMenu !== $key,
                         ])
                     >
-                        {{ $label }}
+                        <span class="mr-2 text-violet-400/80">{{ ['overview'=>'✦','monitoring'=>'◉','webhooks'=>'✉','gateway'=>'⌁','moderation'=>'⚑','members'=>'♙','music'=>'♫','events'=>'◷','logs'=>'▤','settings'=>'⚙'][$key] ?? '◇' }}</span>{{ $label }}
                     </button>
 
                 @endforeach
@@ -240,7 +256,7 @@
                         'border-emerald-500/20 bg-emerald-500/5 text-emerald-400' => $botConnected,
                         'border-white/10 text-zinc-400' => ! $botConnected,
                     ])>
-                        ManukAPP · {{ $botConnected ? 'Online' : 'Not Connected' }}
+                        crypt · {{ $botConnected ? 'Online' : 'Not Connected' }}
                     </div>
 
                     {{-- DISCORD AVATAR --}}
@@ -301,7 +317,7 @@
                                 => $activeMenu !== $key,
                         ])
                     >
-                        {{ $label }}
+                        <span class="mr-2 text-violet-400/80">{{ ['overview'=>'✦','monitoring'=>'◉','webhooks'=>'✉','gateway'=>'⌁','moderation'=>'⚑','members'=>'♙','music'=>'♫','events'=>'◷','logs'=>'▤','settings'=>'⚙'][$key] ?? '◇' }}</span>{{ $label }}
                     </button>
 
                 @endforeach
@@ -370,7 +386,31 @@
             </div>
 
             {{-- PAGE CONTENT --}}
-            <div class="space-y-8 p-6 lg:p-8">
+            <div class="mx-auto max-w-[1600px] space-y-7 p-4 sm:p-6 lg:p-8">
+                <div class="relative overflow-hidden rounded-3xl border border-violet-400/15 bg-gradient-to-r from-[#21152f] via-[#15131f] to-[#11121a] p-5 shadow-xl shadow-black/20 sm:p-7">
+                    <div class="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-violet-600/15 blur-3xl"></div>
+                    <div class="relative flex flex-wrap items-center justify-between gap-5">
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-[.32em] text-violet-300">Hollowfang · Command Sanctuary</p>
+                            <h3 class="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">{{ $menus[$activeMenu] }}</h3>
+                            <p class="mt-2 max-w-xl text-sm text-zinc-400">Kelola komunitas dan pantau crypt dari satu tempat.</p>
+                        </div>
+                        <div class="flex flex-col items-end gap-2">
+                            <button type="button" wire:click="refreshNow" wire:loading.attr="disabled" wire:target="refreshNow"
+                                class="rounded-xl border border-violet-300/20 bg-violet-500/15 px-4 py-2.5 text-sm font-medium text-violet-100 transition hover:bg-violet-500/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400 disabled:opacity-50">
+                                <span wire:loading.remove wire:target="refreshNow">↻ Refresh status</span>
+                                <span wire:loading wire:target="refreshNow">Mengecek API...</span>
+                            </button>
+                            <p class="text-[11px] text-zinc-500">{{ $apiChecked ? 'Pemeriksaan: '.\Illuminate\Support\Carbon::parse($apiChecked)->format('H:i:s') : 'Belum diperiksa' }}</p>
+                        </div>
+                    </div>
+                </div>
+                @if (! $botConnected)
+                    <div role="status" class="flex items-start gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/5 p-4 text-sm text-amber-200">
+                        <span class="text-lg">◇</span>
+                        <div><p class="font-semibold">Monitoring offline</p><p class="mt-1 text-amber-100/70">{{ $apiMessage }}</p></div>
+                    </div>
+                @endif
 
                 {{-- SUCCESS NOTIFICATION --}}
                 @if (session('success'))
@@ -451,8 +491,24 @@
                                 Server Activity
                             </h4>
 
-                            <div class="mt-8 flex h-48 items-center justify-center rounded-xl border border-dashed border-white/10 text-sm text-zinc-500">
-                                Belum ada data aktivitas
+                            <div class="mt-5 space-y-4">
+                                <div class="flex items-center justify-between rounded-xl border border-white/5 bg-[#11111a] p-4">
+                                    <div><p class="text-xs uppercase tracking-wide text-zinc-500">Server</p><p class="mt-1 text-sm font-medium text-white">{{ $guildName ?: 'Tidak tersedia' }}</p></div>
+                                    <span class="text-xs {{ $gatewayConnected ? 'text-emerald-400' : 'text-zinc-500' }}">{{ $gatewayConnected ? '● Gateway ready' : '○ Offline' }}</span>
+                                </div>
+                                <div class="rounded-xl border border-white/5 bg-[#11111a] p-4">
+                                    <p class="text-xs uppercase tracking-wide text-violet-300">♫ Now Playing</p>
+                                    @if ($nowPlaying)
+                                        <p class="mt-2 break-words font-semibold text-white">{{ data_get($nowPlaying, 'title', 'Unknown track') }}</p>
+                                        <p class="mt-1 text-xs text-zinc-400">{{ data_get($nowPlaying, 'artist', 'Unknown artist') }}</p>
+                                        @if ($trackProgress !== null)
+                                            <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10"><div class="h-full rounded-full bg-violet-400" style="width: {{ $trackProgress }}%"></div></div>
+                                        @endif
+                                    @else
+                                        <p class="mt-2 text-sm text-zinc-500">{{ $botConnected ? 'Belum ada lagu yang sedang diputar.' : 'Menunggu koneksi monitoring.' }}</p>
+                                    @endif
+                                </div>
+                                <div class="flex justify-between text-xs text-zinc-500"><span>Antrean musik</span><span>{{ $queueLength ?? '—' }} track</span></div>
                             </div>
 
                         </div>
