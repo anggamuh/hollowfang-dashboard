@@ -50,7 +50,7 @@
         $musicPaused = data_get($botHealth, 'music.paused') === true;
         $trackDurationMs = data_get($nowPlaying, 'duration_ms');
         $trackPositionMs = data_get($nowPlaying, 'position_ms');
-        $trackProgress = is_numeric($trackDurationMs) && (float) $trackDurationMs > 0
+        $trackProgress = is_numeric($trackPositionMs) && is_numeric($trackDurationMs) && (float) $trackDurationMs > 0
             ? max(0, min(100, round(100 * (float) $trackPositionMs / (float) $trackDurationMs)))
             : null;
 
@@ -812,6 +812,25 @@
                             </div>
                         </section>
                     </div>
+
+                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Panduan kontrol musik Discord">
+                        @foreach ([
+                            ['/play', 'Putar lagu atau masukkan ke antrean'],
+                            ['/pause /resume', 'Jeda dan lanjutkan playback'],
+                            ['/skip /voteskip', 'Lewati lagu sesuai aturan DJ/voting'],
+                            ['/autoplay /loop', 'Atur rekomendasi dan pengulangan'],
+                            ['/queue /shuffle', 'Lihat dan acak antrean'],
+                            ['/remove /move', 'Kelola posisi lagu'],
+                            ['/247', 'Kelola mode musik 24/7'],
+                            ['/musicsettings', 'Pengaturan musik per server'],
+                        ] as [$command, $description])
+                            <article class="rounded-2xl border border-white/10 bg-[#191a22] p-4">
+                                <p class="font-mono text-sm font-semibold text-violet-200">{{ $command }}</p>
+                                <p class="mt-2 text-xs text-zinc-400">{{ $description }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+                    <p class="text-xs text-zinc-500">Kontrol dijalankan melalui slash command Discord. API monitoring bot saat ini hanya mendukung pembacaan status; dashboard tidak mengirim perintah playback yang belum didukung.</p>
 
                 {{-- WEBHOOKS & EMBEDS --}}
                 @elseif ($activeMenu === 'webhooks')
