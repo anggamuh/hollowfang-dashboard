@@ -1,4 +1,4 @@
-<div class="min-w-0 space-y-5 pb-28 text-zinc-100 sm:pb-6" x-data="{confirm:false,kind:'',toast:'',ask(k){this.kind=k;this.confirm=true}}" x-on:hf-community-toast.window="toast=$event.detail.message;setTimeout(()=>toast='',4000)">
+<div class="min-w-0 space-y-5 text-zinc-100" x-data="{confirm:false,kind:'',toast:'',ask(k){this.kind=k;this.confirm=true}}" x-on:hf-community-toast.window="toast=$event.detail.message;setTimeout(()=>toast='',4000)">
     <section class="rounded-3xl border border-violet-400/20 bg-[#161720] p-5 sm:p-8">
         <p class="text-xs font-bold uppercase tracking-[.3em] text-violet-300">HOLLOWFANG • COMMUNITY SYSTEM</p>
         <div class="mt-2 flex flex-wrap items-center justify-between gap-3"><div><h2 class="text-2xl font-extrabold text-white sm:text-3xl">Community Control</h2><p class="mt-2 text-sm text-zinc-400">Welcome · AutoMod · Tickets · Self Roles</p></div><button type="button" wire:click="refreshData" class="min-h-11 rounded-xl border border-white/10 bg-white/5 px-4 text-sm hover:bg-white/10">↻ Sinkronkan</button></div>

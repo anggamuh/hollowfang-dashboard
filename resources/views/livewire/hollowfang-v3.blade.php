@@ -1,4 +1,4 @@
-<div class="min-w-0 space-y-5 pb-28 text-zinc-100 sm:space-y-6 sm:pb-6" wire:poll.45s.visible="refreshData"
+<div class="min-w-0 space-y-5 text-zinc-100 sm:space-y-6" wire:poll.45s.visible="refreshData"
     x-data="{
         confirmOpen: false, confirmKind: '', confirmId: '', confirmTitle: '', confirmText: '', working: false,
         toast: '', toastType: 'success',
@@ -31,7 +31,7 @@
         <div class="relative flex flex-wrap items-end justify-between gap-5">
             <div class="space-y-2">
                 <p class="text-[11px] font-bold uppercase tracking-[.32em] text-violet-300">Hollowfang · Control Center</p>
-                <h2 class="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">Server Operations <span class="text-violet-400">V3</span></h2>
+                <h2 class="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">Server Operations</h2>
                 <p class="max-w-xl text-sm text-zinc-400">Kelola komunitas, keamanan, role, dan kegiatan server melalui ManukAPP.</p>
             </div>
             <button type="button" wire:click="refreshData" wire:loading.attr="disabled" wire:target="refreshData"
@@ -214,7 +214,7 @@
 
     {{-- Mobile-first navigation; preserves existing desktop tabs and Livewire state. --}}
     <nav aria-label="Navigasi Hollowfang V3 pada ponsel"
-        class="fixed inset-x-0 bottom-0 z-[90] border-t border-violet-400/20 bg-[#11121b]/95 px-1 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 shadow-2xl shadow-black/60 backdrop-blur-xl sm:hidden">
+        class="hidden fixed inset-x-0 bottom-0 z-[90] border-t border-violet-400/20 bg-[#11121b]/95 px-1 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 shadow-2xl shadow-black/60 backdrop-blur-xl sm:hidden">
         <div class="mx-auto grid max-w-lg grid-cols-5 gap-1">
             @foreach ([
                 ['overview', '⌂', 'Home'],

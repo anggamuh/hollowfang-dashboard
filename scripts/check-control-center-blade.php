@@ -13,6 +13,8 @@ $paths = [
     __DIR__.'/../resources/views/livewire/hollowfang-community.blade.php',
 ];
 
+$paths = array_merge($paths, glob(__DIR__.'/../resources/views/livewire/partials/control-*.blade.php'));
+
 foreach ($paths as $path) {
     \Illuminate\Support\Facades\Blade::compileString(file_get_contents($path));
     fwrite(STDOUT, 'Compiled '.basename($path).PHP_EOL);
