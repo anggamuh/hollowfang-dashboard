@@ -102,3 +102,12 @@ php scripts/check-control-center-blade.php
 - Tidak ada endpoint bot baru atau migrasi database untuk upgrade ini. Bot tetap memutuskan izin dan hierarki Discord.
 
 Tes regresi: `php artisan test tests/Feature/HollowfangUsabilityTest.php tests/Feature/HollowfangOperationsUpgradeTest.php`.
+
+## Event planner dan Community workspace
+
+- Input jadwal event selalu **WIB (Asia/Jakarta)**, terlepas dari timezone server. Waktu yang lewat ditolak berdasarkan waktu WIB; payload bot menyertakan offset +07:00.
+- Daftar event mendukung pencarian judul/deskripsi/channel dan filter status dari data bot. Ticket mendukung pencarian ID ticket/member/staff dan filter open/claimed/closed. Filter hanya atas data yang sudah dimuat, tanpa request API tambahan.
+- Sinkronkan Community memperbarui aktivitas, ticket, dan directory tanpa menimpa form pengaturan. **Muat ulang pengaturan bot** membuang perubahan hanya setelah konfirmasi; kegagalan jaringan mempertahankan form.
+- Form belum tersimpan hanya bertahan selama komponen terbuka, bukan setelah pindah menu/reload browser. Simpan sebelum meninggalkan halaman.
+- Test Welcome hanya dikirim setelah bot mengonfirmasi save (`ok: true`). Respons HTTP 200 tanpa konfirmasi tidak dianggap berhasil.
+- Tidak membutuhkan migrasi atau endpoint bot baru. Jalankan `php artisan test tests/Feature/HollowfangPlanningTest.php` untuk regresi fitur ini.
