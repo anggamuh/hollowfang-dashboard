@@ -3,10 +3,29 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use Throwable;
 
 class ManukApiService
 {
+    public function snapshot(): array
+    {
+        return Cache::remember($this->cacheKey(), 10, fn () => $this->health());
+    }
+
+    public function forgetSnapshot(): void
+    {
+        Cache::forget($this->cacheKey());
+    }
+
+    private function cacheKey(): string
+    {
+        // Isolate installations and token rotations without storing credentials in keys.
+        return 'hollowfang:health:'.hash('sha256', json_encode([
+            config('services.manuk.base_url'), config('services.manuk.token'),
+        ]));
+    }
+
     /**
      * Read-only monitoring. Never expose API tokens or exception messages to the UI.
      * The remote bot remains authoritative; unknown metrics stay null, not zero.

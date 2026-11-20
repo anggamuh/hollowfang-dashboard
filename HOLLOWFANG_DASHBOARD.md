@@ -91,3 +91,14 @@ Jalankan:
 php artisan test tests/Unit/HollowfangAuditTest.php tests/Feature/HollowfangAuditExportTest.php
 php scripts/check-control-center-blade.php
 ```
+
+## Server operations usability
+
+- Menu utama mendukung URL seperti `/control?menu=members` untuk bookmark dan tombol Back/Forward. Nilai menu tidak dikenal kembali ke Overview.
+- Overview menyediakan akses cepat ke Members, Moderation, Announcements, dan Community.
+- Members dan Moderation menampilkan hasil pencarian yang dapat dipilih, filter manusia/bot dan role, serta 12 anggota per halaman. Filter dan pagination hanya berlaku pada maksimal 100 hasil API, bukan seluruh server. Cari Discord ID untuk anggota di luar cache bot.
+- Sebelum perubahan role, dashboard mengambil ulang daftar role dari bot. Data role lama atau state browser tidak bisa menjadi dasar izin.
+- Monitoring berbagi snapshot cache selama 10 detik per konfigurasi API. Refresh status dan perintah musik yang berhasil membatalkan cache. Waktu pemeriksaan menunjukkan waktu pengambilan sebenarnya dalam WIB. Polling memakai `.visible` agar elemen di luar viewport tidak memicu polling.
+- Tidak ada endpoint bot baru atau migrasi database untuk upgrade ini. Bot tetap memutuskan izin dan hierarki Discord.
+
+Tes regresi: `php artisan test tests/Feature/HollowfangUsabilityTest.php tests/Feature/HollowfangOperationsUpgradeTest.php`.

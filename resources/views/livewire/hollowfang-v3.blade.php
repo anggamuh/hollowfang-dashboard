@@ -1,4 +1,4 @@
-<div class="min-w-0 space-y-5 pb-28 text-zinc-100 sm:space-y-6 sm:pb-6" wire:poll.45s="refreshData"
+<div class="min-w-0 space-y-5 pb-28 text-zinc-100 sm:space-y-6 sm:pb-6" wire:poll.45s.visible="refreshData"
     x-data="{
         confirmOpen: false, confirmKind: '', confirmId: '', confirmTitle: '', confirmText: '', working: false,
         toast: '', toastType: 'success',
@@ -99,14 +99,27 @@
             <h3 class="font-semibold text-white">Cari Anggota Discord</h3>
             <p class="mt-1 text-xs text-zinc-500">Pencarian nama dari cache bot; Discord ID bisa dicari langsung meskipun tidak masuk cache.</p>
             <div class="mt-4 flex flex-col gap-2 sm:flex-row">
-                <input type="search" wire:model="search" wire:keydown.enter="refreshData" placeholder="Username atau Discord ID" class="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#101116] p-3 text-sm text-white outline-none focus:border-violet-500/60"/>
-                <button type="button" wire:click="refreshData" class="min-h-11 rounded-xl bg-violet-700 px-5 py-3 text-sm font-semibold hover:bg-violet-600">Cari</button>
+                <input type="search" wire:model="search" wire:keydown.enter="searchMembers" maxlength="100" aria-label="Cari username atau Discord ID" placeholder="Username atau Discord ID" class="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#101116] p-3 text-sm text-white outline-none focus:border-violet-500/60"/>
+                <button type="button" wire:click="searchMembers" wire:loading.attr="disabled" class="min-h-11 rounded-xl bg-violet-700 px-5 py-3 text-sm font-semibold hover:bg-violet-600">Cari</button>
             </div>
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                <label class="text-xs text-zinc-400">Jenis anggota
+                    <select wire:model.live="memberType" class="mt-1 w-full rounded-xl border border-white/10 bg-[#101116] p-3 text-sm text-white">
+                        <option value="all">Semua anggota</option><option value="human">Manusia</option><option value="bot">Bot</option>
+                    </select>
+                </label>
+                <label class="text-xs text-zinc-400">Filter role
+                    <select wire:model.live="memberRole" class="mt-1 w-full rounded-xl border border-white/10 bg-[#101116] p-3 text-sm text-white">
+                        <option value="">Semua role</option>
+                        @foreach ($roles as $role)<option value="{{ $role['id'] }}">{{ $role['name'] }}</option>@endforeach
+                    </select>
+                </label>
+            </div>
+            <p class="mt-3 text-xs text-zinc-400">{{ $memberMatches }} cocok dari {{ count($members) }} hasil API (maksimal 100). Filter berlaku pada hasil yang dimuat, bukan seluruh server.</p>
             @if ($membersPartial)<p class="mt-3 text-xs text-amber-300">Sebagian member mungkin belum termuat karena Discord GuildMembers intent tidak diaktifkan.</p>@endif
         </section>
-        @if ($tab === 'members')
             <div class="grid gap-3 md:grid-cols-2">
-                @forelse ($members as $m)
+                @forelse ($visibleMembers as $m)
                     <article wire:key="member-{{ $m['id'] }}" class="flex flex-col items-start justify-between gap-3 rounded-2xl border border-white/10 bg-[#191a21] p-4 sm:flex-row sm:p-5">
                         <div class="min-w-0"><p class="truncate font-semibold">{{ $m['displayName'] ?? $m['username'] ?? 'Unknown' }} @if($m['bot'] ?? false)<span class="ml-1 rounded bg-violet-600/20 px-1.5 py-0.5 text-[10px] text-violet-300">BOT</span>@endif</p><p class="mt-1 break-all text-xs text-zinc-500">{{ $m['id'] }}</p><p class="mt-2 text-xs text-zinc-400">{{ count($m['roleIds'] ?? []) }} role · Bergabung {{ !empty($m['joinedAt']) ? \Carbon\Carbon::parse($m['joinedAt'])->timezone('Asia/Jakarta')->format('d M Y') : '—' }}</p></div>
                         <button type="button" wire:click="selectTarget('{{ $m['id'] }}')" class="min-h-11 w-full shrink-0 rounded-lg border border-violet-500/30 px-3 py-2 text-xs font-semibold text-violet-300 hover:bg-violet-500/10 sm:w-auto">Pilih</button>
@@ -115,6 +128,15 @@
                     <div class="col-span-full rounded-2xl border border-dashed border-white/10 bg-[#191a21] p-8 text-center text-sm text-zinc-400">Belum ada anggota yang cocok dalam cache.</div>
                 @endforelse
             </div>
+            <nav aria-label="Halaman anggota" class="flex items-center justify-between gap-3 text-sm">
+                <button type="button" wire:click="goToMemberPage({{ $memberPage - 1 }})" @disabled($memberPage <= 1) class="rounded-xl border border-white/10 px-4 py-2 disabled:opacity-30">← Sebelumnya</button>
+                <span class="text-xs text-zinc-400">{{ $memberPage }} / {{ $memberPages }}</span>
+                <button type="button" wire:click="goToMemberPage({{ $memberPage + 1 }})" @disabled($memberPage >= $memberPages) class="rounded-xl border border-white/10 px-4 py-2 disabled:opacity-30">Berikutnya →</button>
+            </nav>
+            @if ($targetId)
+                <p role="status" class="rounded-xl border border-violet-400/20 bg-violet-500/10 p-3 text-sm text-violet-200">Anggota dipilih: <span class="font-mono">{{ $targetId }}</span></p>
+            @endif
+        @if ($tab === 'members')
             <form x-on:submit.prevent="ask('role')" class="space-y-4 rounded-2xl border border-white/10 bg-[#191a21] p-6">
                 <div><h3 class="font-semibold text-white">Kelola Role Anggota</h3><p class="mt-1 text-xs text-zinc-400">Aksi langsung ke Discord; hanya role yang boleh dikelola bot dan operator.</p></div>
                 <label class="block space-y-1 text-xs text-zinc-400">Discord ID anggota<input wire:model="targetId" pattern="[0-9]{15,22}" required placeholder="Masukkan atau pilih ID anggota" class="w-full rounded-xl border border-white/10 bg-[#101116] p-3 text-sm text-white"></label>

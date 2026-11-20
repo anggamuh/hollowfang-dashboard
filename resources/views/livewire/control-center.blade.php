@@ -1,4 +1,4 @@
-<div wire:poll.15s class="min-h-screen bg-[#0d0e12] text-zinc-100">
+<div wire:poll.15s.visible class="min-h-screen bg-[#0d0e12] text-zinc-100">
 
     @php
         $account = auth()->user();
@@ -94,6 +94,7 @@
                     <button
                         type="button"
                         wire:click="changeMenu('{{ $key }}')"
+                        aria-current="{{ $activeMenu === $key ? 'page' : 'false' }}"
                         @class([
                             'w-full rounded-xl px-4 py-3 text-left text-sm transition',
                             'bg-violet-500/15 text-violet-300'
@@ -309,6 +310,7 @@
                     <button
                         type="button"
                         wire:click="changeMenu('{{ $key }}')"
+                        aria-current="{{ $activeMenu === $key ? 'page' : 'false' }}"
                         @class([
                             'shrink-0 rounded-lg px-3 py-2 text-xs',
                             'bg-violet-500/20 text-violet-200'
@@ -401,7 +403,7 @@
                                 <span wire:loading.remove wire:target="refreshNow">↻ Refresh status</span>
                                 <span wire:loading wire:target="refreshNow">Mengecek API...</span>
                             </button>
-                            <p class="text-[11px] text-zinc-500">{{ $apiChecked ? 'Pemeriksaan: '.\Illuminate\Support\Carbon::parse($apiChecked)->format('H:i:s') : 'Belum diperiksa' }}</p>
+                            <p class="text-[11px] text-zinc-500">{{ $apiChecked ? 'Pemeriksaan: '.\Illuminate\Support\Carbon::parse($apiChecked)->timezone('Asia/Jakarta')->format('H:i:s').' WIB' : 'Belum diperiksa' }}</p>
                         </div>
                     </div>
                 </div>
@@ -488,6 +490,20 @@
                         </p>
 
                     </div>
+
+                    <section aria-label="Akses cepat" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        @foreach ([
+                            ['members', 'Kelola anggota', 'Cari anggota dan atur role server.'],
+                            ['moderation', 'Moderasi server', 'Warning, timeout, dan tindakan anggota.'],
+                            ['webhooks', 'Buat pengumuman', 'Kirim informasi melalui bot atau webhook.'],
+                            ['community', 'Atur komunitas', 'Welcome, automod, dan panel ticket.'],
+                        ] as [$destination, $title, $description])
+                            <button type="button" wire:click="changeMenu('{{ $destination }}')" class="group rounded-2xl border border-violet-400/20 bg-violet-500/5 p-5 text-left transition hover:border-violet-400/50 hover:bg-violet-500/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-400">
+                                <span class="flex items-center justify-between text-sm font-semibold text-violet-200">{{ $title }} <span aria-hidden="true">↗</span></span>
+                                <span class="mt-2 block text-xs leading-relaxed text-zinc-400">{{ $description }}</span>
+                            </button>
+                        @endforeach
+                    </section>
 
                     {{-- STATISTICS --}}
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
