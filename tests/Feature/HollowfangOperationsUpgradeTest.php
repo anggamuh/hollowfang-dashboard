@@ -21,7 +21,6 @@ class HollowfangOperationsUpgradeTest extends TestCase
         config()->set('hollowfang.owner_discord_ids', ['111111111111111111']);
         config()->set('services.manuk.token', str_repeat('x', 40));
         config()->set('services.manuk.base_url', 'http://127.0.0.1:3210');
-        Http::fake(['*' => Http::response(['bot' => ['connected' => false]])]);
     }
 
     private function owner(): User
@@ -34,6 +33,7 @@ class HollowfangOperationsUpgradeTest extends TestCase
 
     public function test_owner_can_access_both_announcement_and_encrypted_webhook_interfaces(): void
     {
+        Http::fake(['*' => Http::response(['bot' => ['connected' => false]])]);
         $this->actingAs($this->owner());
 
         Livewire::test(ControlCenter::class)
@@ -50,6 +50,7 @@ class HollowfangOperationsUpgradeTest extends TestCase
 
     public function test_moderation_rejects_self_target_without_posting_to_bot(): void
     {
+        Http::fake(['*' => Http::response(['bot' => ['connected' => false]])]);
         $user = $this->owner();
         $this->actingAs($user);
 
@@ -65,6 +66,7 @@ class HollowfangOperationsUpgradeTest extends TestCase
 
     public function test_role_changes_reject_unlisted_role_ids(): void
     {
+        Http::fake(['*' => Http::response(['bot' => ['connected' => false]])]);
         $this->actingAs($this->owner());
 
         Livewire::test(HollowfangV3::class, ['initialTab' => 'members'])
@@ -100,6 +102,7 @@ class HollowfangOperationsUpgradeTest extends TestCase
 
     public function test_music_control_rejects_unknown_action_without_posting(): void
     {
+        Http::fake(['*' => Http::response(['bot' => ['connected' => false]])]);
         $this->actingAs($this->owner());
 
         Livewire::test(ControlCenter::class)
