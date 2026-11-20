@@ -9,6 +9,10 @@
     @if(empty($config))
         <div class="rounded-2xl border border-white/10 bg-[#191a21] p-6 text-sm text-zinc-400">API Community belum tersambung. Jalankan ManukAPP dengan port 3213.</div>
     @else
+    <div class="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-violet-400/20 bg-violet-500/5 p-4">
+        <p class="max-w-2xl text-xs leading-relaxed text-zinc-300">Sinkronkan memperbarui aktivitas dan ticket tanpa menimpa form ini. Simpan pengaturan sebelum pindah menu atau menutup halaman; perubahan belum tersimpan hanya ada selama form tetap terbuka.</p>
+        <button type="button" wire:click="reloadSettings" wire:confirm="Buang perubahan form dan muat pengaturan terbaru dari bot?" wire:loading.attr="disabled" class="rounded-xl border border-white/15 px-4 py-2 text-xs text-violet-200 disabled:opacity-50">Muat ulang pengaturan bot</button>
+    </div>
     <div class="grid gap-4 lg:grid-cols-2">
         <section class="space-y-4 rounded-2xl border border-white/10 bg-[#191a21] p-4 sm:p-6">
             <div><h3 class="text-lg font-semibold">✦ Welcome & Goodbye</h3><p class="mt-1 text-xs text-zinc-400">Butuh Guild Members Intent aktif di Discord Developer Portal.</p></div>
@@ -61,8 +65,13 @@
             <label class="block space-y-1 text-xs text-zinc-400">Role staff ticket<select wire:model="config.ticketSupportRoleId" class="min-h-11 w-full rounded-xl border border-white/10 bg-[#111218] p-3 text-sm text-white"><option value="">Tanpa role khusus</option>@foreach($roles as $id => $name)<option value="{{ $id }}">{{ $name }}</option>@endforeach</select></label>
             <p class="text-xs text-amber-200">Setelah mengubah kategori atau role staff, klik <strong>Simpan Pengaturan</strong> terlebih dahulu. Role staff harus punya akses yang sesuai dan bot memerlukan Manage Channels serta Read Message History.</p>
             <button type="button" x-on:click="ask('ticket')" class="min-h-11 w-full rounded-xl border border-violet-400/30 bg-violet-500/10 p-3 text-sm font-semibold text-violet-100 hover:bg-violet-500/20">Publikasikan Panel Ticket</button>
+            <div class="grid gap-3 sm:grid-cols-2">
+                <label class="text-xs text-zinc-400">Cari ticket<input type="search" wire:model.live.debounce.350ms="ticketSearch" maxlength="100" placeholder="ID ticket, member, atau staff" class="mt-1 w-full rounded-xl border border-white/10 bg-[#111218] p-3 text-sm text-white"></label>
+                <label class="text-xs text-zinc-400">Status ticket<select wire:model.live="ticketStatus" class="mt-1 w-full rounded-xl border border-white/10 bg-[#111218] p-3 text-sm text-white"><option value="all">Semua status</option><option value="open">Open</option><option value="claimed">Claimed</option><option value="closed">Closed</option></select></label>
+            </div>
+            <p class="text-xs text-zinc-500">{{ count($filteredTickets) }} cocok dari {{ count($tickets) }} ticket yang dimuat dari bot.</p>
             <div class="max-h-80 space-y-3 overflow-y-auto" aria-label="Riwayat ticket">
-                @forelse($tickets as $ticket)
+                @forelse($filteredTickets as $ticket)
                     <article wire:key="hf-ticket-{{ $ticket['id'] ?? $loop->index }}" class="rounded-xl border border-white/10 bg-[#111218] p-3 text-xs">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <span class="font-semibold text-violet-200">Ticket {{ substr((string)($ticket['id'] ?? ''), 0, 8) }}</span>
@@ -77,7 +86,7 @@
                         @endif
                     </article>
                 @empty
-                    <p class="text-xs text-zinc-500">Belum ada ticket.</p>
+                    <p class="text-xs text-zinc-500">Tidak ada ticket yang cocok.</p>
                 @endforelse
             </div>
         </section>

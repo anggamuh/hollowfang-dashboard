@@ -30,6 +30,8 @@ class HollowfangV3 extends Component
     public string $action = 'timeout';
     public string $reason = '';
     public int $minutes = 10;
+    public string $eventSearch = '';
+    public string $eventStatus = 'all';
     public string $eventTitle = '';
     public string $eventDescription = '';
     public string $eventChannelId = '';
@@ -269,8 +271,13 @@ class HollowfangV3 extends Component
             'eventTitle' => ['required', 'string', 'max:100'],
             'eventDescription' => ['nullable', 'string', 'max:1000'],
             'eventChannelId' => ['required', 'regex:/^\d{15,22}$/'],
-            'eventAt' => ['required', 'date', 'after:now'],
+            'eventAt' => ['required', 'date_format:Y-m-d\\TH:i'],
         ]);
+        $scheduledAt = \Carbon\CarbonImmutable::createFromFormat('!Y-m-d\\TH:i', $data['eventAt'], 'Asia/Jakarta');
+        if (! $scheduledAt || ! $scheduledAt->isFuture()) {
+            $this->addError('eventAt', 'Jadwal harus setelah waktu sekarang (WIB).');
+            return;
+        }
         if (! isset($this->channels[$this->eventChannelId])) { $this->errorMessage = 'Channel harus ada di allowlist Announcements.'; return; }
         if (! $this->enforceActionLimit('events')) return;
         $payload = [
@@ -278,7 +285,7 @@ class HollowfangV3 extends Component
             'title' => $data['eventTitle'],
             'description' => $data['eventDescription'] ?? '',
             'channelId' => (string) $data['eventChannelId'],
-            'at' => \Carbon\Carbon::parse($data['eventAt'], config('app.timezone'))->toIso8601String(),
+            'at' => $scheduledAt->toIso8601String(),
         ];
         $this->errorMessage = ''; $this->successMessage = '';
         $result = $this->requestApi('POST', '/api/v3/events', $payload);
@@ -303,7 +310,18 @@ class HollowfangV3 extends Component
         $memberPages = max(1, (int) ceil($filteredMembers->count() / 12));
         $this->memberPage = max(1, min($this->memberPage, $memberPages));
 
+        $eventRows = collect($this->events)->filter(fn ($event) => is_array($event));
+        $query = mb_strtolower(trim(mb_substr($this->eventSearch, 0, 100)));
+        $filteredEvents = $eventRows->filter(fn ($event) =>
+            ($this->eventStatus === 'all' || ($event['status'] ?? 'unknown') === $this->eventStatus)
+            && ($query === '' || str_contains(mb_strtolower(implode(' ', [
+                $event['title'] ?? '', $event['description'] ?? '', $event['channelId'] ?? '',
+            ])), $query))
+        );
+
         return view('livewire.hollowfang-v3', [
+            'filteredEvents' => $filteredEvents,
+            'eventStatuses' => $eventRows->pluck('status')->filter()->unique()->sort()->values(),
             'visibleMembers' => $filteredMembers->slice(($this->memberPage - 1) * 12, 12),
             'memberMatches' => $filteredMembers->count(),
             'memberPages' => $memberPages,

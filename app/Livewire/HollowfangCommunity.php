@@ -4,11 +4,16 @@ namespace App\Livewire;
 
 use Illuminate\Support\Facades\Http;
 use Livewire\Component;
+use Livewire\Attributes\Locked;
 use Throwable;
 
 class HollowfangCommunity extends Component
 {
     public array $config = [];
+    #[Locked]
+    public bool $settingsLoaded = false;
+    public string $ticketSearch = '';
+    public string $ticketStatus = 'all';
     public array $activity = [];
     public array $tickets = [];
     public array $capabilities = [];
@@ -58,8 +63,9 @@ class HollowfangCommunity extends Component
         $this->errorMessage = '';
         $result = $this->api('GET', '/api/v4/status');
         if ($result !== null) {
-            $this->config = $result['config'] ?? [];
-            $this->words = implode(', ', $this->config['blockedWords'] ?? []);
+            if (! $this->settingsLoaded && is_array($result['config'] ?? null)) {
+                $this->loadSettings($result['config']);
+            }
             $this->activity = $result['activity'] ?? [];
             $this->tickets = $result['tickets'] ?? [];
             $this->capabilities = $result['capabilities'] ?? [];
@@ -79,9 +85,33 @@ class HollowfangCommunity extends Component
         }
     }
 
-    public function saveSettings(): void
+    private function loadSettings(array $config): void
+    {
+        $this->config = $config;
+        $this->words = implode(', ', $config['blockedWords'] ?? []);
+        $this->settingsLoaded = true;
+    }
+
+    public function reloadSettings(): void
     {
         $this->guardOwner();
+        $this->errorMessage = '';
+        $this->successMessage = '';
+        $result = $this->api('GET', '/api/v4/status');
+        if (! is_array($result['config'] ?? null)) {
+            $this->errorMessage = 'Pengaturan belum bisa dimuat. Perubahan di form tetap disimpan.';
+            return;
+        }
+        $this->loadSettings($result['config']);
+        $this->resetErrorBag();
+        $this->successMessage = 'Form dimuat ulang dari pengaturan bot.';
+    }
+
+    public function saveSettings(): bool
+    {
+        $this->guardOwner();
+        $this->errorMessage = '';
+        $this->successMessage = '';
         $this->validate([
             'config.welcomeEnabled' => 'boolean', 'config.goodbyeEnabled' => 'boolean',
             'config.autoModEnabled' => 'boolean', 'config.blockLinks' => 'boolean',
@@ -108,7 +138,10 @@ class HollowfangCommunity extends Component
             $this->successMessage = 'Pengaturan berhasil disimpan di ManukAPP.';
             $this->dispatch('hf-community-toast', message: $this->successMessage);
             $this->refreshData();
+            return true;
         }
+        if ($this->errorMessage === '') $this->errorMessage = 'Bot belum mengonfirmasi penyimpanan. Perubahan di form tetap disimpan.';
+        return false;
     }
 
     public function testWelcome(): void
@@ -118,8 +151,7 @@ class HollowfangCommunity extends Component
         $this->successMessage = '';
         $this->resetErrorBag();
         // Simpan konfigurasi terbaru sebelum mengirim preview.
-        $this->saveSettings();
-        if ($this->errorMessage !== '' || $this->getErrorBag()->isNotEmpty()) return;
+        if (! $this->saveSettings()) return;
         $result = $this->api('POST', '/api/v4/test-welcome', [
             'actor' => (string) auth()->user()->discord_id,
         ]);
@@ -166,5 +198,15 @@ class HollowfangCommunity extends Component
         }, 'hollowfang-ticket-'.$ticketId.'.txt', ['Content-Type' => 'text/plain; charset=utf-8']);
     }
 
-    public function render() { return view('livewire.hollowfang-community'); }
+    public function render()
+    {
+        $this->guardOwner();
+        $query = mb_strtolower(trim(mb_substr($this->ticketSearch, 0, 100)));
+        $filteredTickets = collect($this->tickets)->filter(fn ($ticket) => is_array($ticket)
+            && ($this->ticketStatus === 'all' || ($ticket['status'] ?? '') === $this->ticketStatus)
+            && ($query === '' || str_contains(mb_strtolower(implode(' ', [
+                $ticket['id'] ?? '', $ticket['userId'] ?? '', $ticket['claimedBy'] ?? '',
+            ])), $query)));
+        return view('livewire.hollowfang-community', ['filteredTickets' => $filteredTickets]);
+    }
 }
