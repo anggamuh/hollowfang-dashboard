@@ -57,9 +57,15 @@ jobs:
       - name: Render static visual review with synthetic data
         run: HF_VISUAL_PREVIEW=1 php artisan test tests/Feature/HollowfangVisualPreviewTest.php
 
+      - name: Check desktop and mobile layout
+        run: |
+          npm install --prefix "$RUNNER_TEMP/hf-visual" --no-package-lock playwright@1.56.1 alpinejs@3.15.12
+          "$RUNNER_TEMP/hf-visual/node_modules/.bin/playwright" install --with-deps chromium
+          HF_VISUAL_RUNTIME="$RUNNER_TEMP/hf-visual" node scripts/check-workspace-layout.cjs
+
       - name: Upload visual review
         uses: actions/upload-artifact@v4
         with:
           name: hollowfang-visual-preview
-          path: storage/app/visual-preview/overview.html
+          path: storage/app/visual-preview/
           retention-days: 7
