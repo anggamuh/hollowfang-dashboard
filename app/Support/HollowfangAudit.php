@@ -49,7 +49,7 @@ final class HollowfangAudit
     public static function safeCell(mixed $value): string
     {
         $text = is_scalar($value) ? (string) $value : '';
-        $text = str_replace(["\r", "\n", "\0"], ' ', $text);
+        $text = str_replace(["\r\n", "\r", "\n", "\0"], ' ', $text);
         if (preg_match('/^\s*[=+\-@]/u', $text) || preg_match('/^[\t\x0B\x0C]/', $text)) {
             return "'".$text;
         }

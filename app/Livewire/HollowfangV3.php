@@ -23,6 +23,9 @@ class HollowfangV3 extends Component
     public string $roleOperation = 'add';
     public bool $membersPartial = true;
     public string $search = '';
+    public string $memberType = 'all';
+    public string $memberRole = '';
+    public int $memberPage = 1;
     public string $targetId = '';
     public string $action = 'timeout';
     public string $reason = '';
@@ -163,6 +166,22 @@ class HollowfangV3 extends Component
         ]);
     }
 
+    public function updatedMemberType(): void { $this->memberPage = 1; }
+    public function updatedMemberRole(): void { $this->memberPage = 1; }
+
+    public function searchMembers(): void
+    {
+        $this->validate(['search' => ['nullable', 'string', 'max:100']]);
+        $this->memberPage = 1;
+        $this->refreshData();
+    }
+
+    public function goToMemberPage(int $page): void
+    {
+        $this->guardOwner();
+        $this->memberPage = max(1, $page);
+    }
+
     public function selectTarget(string $id): void
     {
         $this->guardOwner();
@@ -204,6 +223,10 @@ class HollowfangV3 extends Component
             'roleOperation' => ['required', 'in:add,remove'],
         ]);
         if (! $this->enforceActionLimit('roles')) return;
+        // Re-read roles before a mutation; public Livewire state can be stale or modified.
+        $directory = $this->requestApi('GET', '/api/v3/roles');
+        if ($directory === null) return;
+        $this->roles = is_array($directory['roles'] ?? null) ? $directory['roles'] : [];
         if (! collect($this->roles)->contains(fn ($role) => (string) ($role['id'] ?? '') === $data['roleId'] && ! ($role['managed'] ?? false))) {
             $this->errorMessage = 'Role tidak tersedia atau dikelola integrasi Discord.';
             return;
@@ -271,7 +294,19 @@ class HollowfangV3 extends Component
     {
         $this->guardOwner();
 
+        $filteredMembers = collect($this->members)->filter(function ($member) {
+            if (! is_array($member) || ! isset($member['id'])) return false;
+            if ($this->memberType === 'human' && ($member['bot'] ?? false)) return false;
+            if ($this->memberType === 'bot' && ! ($member['bot'] ?? false)) return false;
+            return $this->memberRole === '' || in_array($this->memberRole, array_map('strval', $member['roleIds'] ?? []), true);
+        })->values();
+        $memberPages = max(1, (int) ceil($filteredMembers->count() / 12));
+        $this->memberPage = max(1, min($this->memberPage, $memberPages));
+
         return view('livewire.hollowfang-v3', [
+            'visibleMembers' => $filteredMembers->slice(($this->memberPage - 1) * 12, 12),
+            'memberMatches' => $filteredMembers->count(),
+            'memberPages' => $memberPages,
             'filteredAuditLogs' => HollowfangAudit::filter($this->logs, $this->auditSearch, $this->auditCategory),
         ]);
     }

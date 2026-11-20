@@ -2,6 +2,8 @@
 namespace App\Livewire;
 
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use App\Services\ManukApiService;
 use App\Services\BotStatusHistory;
@@ -12,11 +14,13 @@ use Throwable;
 #[Layout('layouts.hollowfang')]
 class ControlCenter extends Component
 {
+    #[Url(as: 'menu', history: true, except: 'overview')]
     public string $activeMenu = 'overview';
     public string $webhookTab = 'announcements';
     public string $musicFeedback = '';
     public string $musicError = '';
 
+    #[Locked]
     public array $menus = [
         'overview' => 'Overview',
         'monitoring' => 'Bot Monitoring',
@@ -30,6 +34,23 @@ class ControlCenter extends Component
         'logs' => 'Audit Logs',
         'settings' => 'Settings',
     ];
+
+    public function mount(): void
+    {
+        $this->normalizeMenu();
+    }
+
+    public function updatedActiveMenu(): void
+    {
+        $this->normalizeMenu();
+    }
+
+    private function normalizeMenu(): void
+    {
+        if (! array_key_exists($this->activeMenu, $this->menus)) {
+            $this->activeMenu = 'overview';
+        }
+    }
 
     public function changeMenu(string $menu): void
     {
@@ -89,6 +110,7 @@ class ControlCenter extends Component
                 ]);
 
             if ($response->successful() && $response->json('ok') === true) {
+                app(ManukApiService::class)->forgetSnapshot();
                 $this->musicFeedback = 'Perintah '.str_replace('_', ' ', $action).' berhasil dijalankan.';
                 return;
             }
@@ -107,13 +129,13 @@ class ControlCenter extends Component
 
     public function refreshNow(): void
     {
-        // A Livewire round-trip re-reads the monitoring snapshot through render().
-        // This operation is read-only and does not issue any Discord commands.
+        app(ManukApiService::class)->forgetSnapshot();
     }
 
     public function render()
     {
-        $health = app(ManukApiService::class)->health();
+        $this->normalizeMenu();
+        $health = app(ManukApiService::class)->snapshot();
 
         return view('livewire.control-center', [
             'botHealth' => $health,

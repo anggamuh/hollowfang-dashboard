@@ -9,6 +9,7 @@ $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 $paths = [
     __DIR__.'/../resources/views/livewire/control-center.blade.php',
     __DIR__.'/../resources/views/layouts/hollowfang.blade.php',
+    __DIR__.'/../resources/views/livewire/hollowfang-v3.blade.php',
 ];
 
 foreach ($paths as $path) {
