@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './hollowfang.css';
 
 @import '../../vendor/livewire/flux/dist/flux.css';
 

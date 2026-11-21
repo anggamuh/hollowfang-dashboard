@@ -66,7 +66,10 @@ class HollowfangControlCenterTest extends TestCase
             ->assertOk()
             ->assertSee('Music Test')
             ->assertSee('Hollowfang')
-            ->assertSee('Music Sessions');
+            ->assertSee('Music Sessions')
+            ->assertSee('Quick actions')
+            ->assertSee('Ctrl K')
+            ->assertSee('Buka menu');
     }
 
     public function test_owner_can_open_music_gateway_and_settings_tabs(): void

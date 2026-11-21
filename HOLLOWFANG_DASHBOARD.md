@@ -111,3 +111,9 @@ Tes regresi: `php artisan test tests/Feature/HollowfangUsabilityTest.php tests/F
 - Form belum tersimpan hanya bertahan selama komponen terbuka, bukan setelah pindah menu/reload browser. Simpan sebelum meninggalkan halaman.
 - Test Welcome hanya dikirim setelah bot mengonfirmasi save (`ok: true`). Respons HTTP 200 tanpa konfirmasi tidak dianggap berhasil.
 - Tidak membutuhkan migrasi atau endpoint bot baru. Jalankan `php artisan test tests/Feature/HollowfangPlanningTest.php` untuk regresi fitur ini.
+
+## Visual workspace redesign
+
+Dark workspace with grouped sidebar navigation, overview hero, compact metric cards, quick actions, music panel, and integration status. Ctrl/Cmd+K opens menu search; native dialogs provide keyboard focus handling and Escape dismissal. Mobile navigation uses the same full menu in a drawer; the competing V3 bottom navigation is hidden. Reduced-motion preferences, visible focus styles, and skip navigation are supported.
+
+All statistics continue to use bot snapshots, with unknown values shown as unknown. No new dependencies, migrations, or bot endpoints. CI can export a static overview with synthetic data as the `hollowfang-visual-preview` artifact; it is not a live dashboard or a public route.

@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout code
@@ -52,4 +52,21 @@ jobs:
         run: php scripts/check-control-center-blade.php
 
       - name: Run Control Center and monitoring regression tests
-        run: php artisan test tests/Feature/HollowfangPlanningTest.php tests/Feature/HollowfangUsabilityTest.php tests/Feature/HollowfangOperationsUpgradeTest.php tests/Feature/BotStatusHistoryTest.php tests/Feature/HollowfangControlCenterTest.php tests/Feature/ManukApiServiceTest.php tests/Unit/HollowfangAuditTest.php tests/Feature/HollowfangAuditExportTest.php
+        run: php artisan test tests/Feature/HollowfangVisualPreviewTest.php tests/Feature/HollowfangPlanningTest.php tests/Feature/HollowfangUsabilityTest.php tests/Feature/HollowfangOperationsUpgradeTest.php tests/Feature/BotStatusHistoryTest.php tests/Feature/HollowfangControlCenterTest.php tests/Feature/ManukApiServiceTest.php tests/Unit/HollowfangAuditTest.php tests/Feature/HollowfangAuditExportTest.php
+
+      - name: Render static visual review with synthetic data
+        run: HF_VISUAL_PREVIEW=1 php artisan test tests/Feature/HollowfangVisualPreviewTest.php
+
+      - name: Check desktop and mobile layout
+        run: |
+          npm install --prefix "$RUNNER_TEMP/hf-visual" --no-package-lock playwright@1.56.1 alpinejs@3.15.12
+          "$RUNNER_TEMP/hf-visual/node_modules/.bin/playwright" install --with-deps chromium
+          HF_VISUAL_RUNTIME="$RUNNER_TEMP/hf-visual" node scripts/check-workspace-layout.cjs
+
+      - name: Upload visual review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hollowfang-visual-preview
+          path: storage/app/visual-preview/
+          retention-days: 7
