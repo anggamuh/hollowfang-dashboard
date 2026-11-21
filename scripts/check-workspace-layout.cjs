@@ -21,6 +21,7 @@ const { chromium } = load('playwright');
             await page.keyboard.press('Control+k');
             await page.getByRole('dialog', { name: 'Ke mana kita?' }).waitFor({ state: 'visible' });
             await page.getByRole('searchbox', { name: 'Cari menu', exact: true }).fill('Music');
+            await page.waitForFunction(() => [...document.querySelectorAll('dialog[x-ref="search"] .hf-command-results button')].filter(button => button.getClientRects().length > 0).length === 1);
             assert.equal(await page.locator('dialog[x-ref="search"] button[wire\\:click]:visible').count(), 1);
             await page.keyboard.press('Escape');
             await page.getByRole('dialog', { name: 'Ke mana kita?' }).waitFor({ state: 'hidden' });
